@@ -1,7 +1,12 @@
-global gTEprops, gLEProps, gTiles, gEEProps, gEffects, gLightEProps, geverysecond, firstFrame, glgtimgQuad, gDirectionKeys
+global gTEprops, gLEProps, gTiles, gEEProps, gEffects, gLightEProps, geverysecond, firstFrame, glgtimgQuad, gDirectionKeys, showControls
 
 
 on exitFrame me
+  if (showControls) then
+    sprite(189).blend = 100
+  else
+    sprite(189).blend = 0
+  end if
   --  if checkKey("N") then
   --    gLightEProps.lightObjects.add([#ps:point(1040/2, 800/2), #sz:point(50, 70), #rt:0, #clr:0])
   --    gLightEProps.edObj = gLightEProps.lightObjects.count
@@ -26,6 +31,7 @@ on exitFrame me
       end if
     end if
     gDirectionKeys[q] = _key.keyPressed([86, 91, 88, 84][q])
+    --script("propEditor").renderPropsImage()
   end repeat
   
   
@@ -53,6 +59,8 @@ on exitFrame me
     dupl = image(member("lightImage").image.width, member("lightImage").image.height, 1)--member("lightImage").image.duplicate()
     dupl.copypixels(  member("lightImage").image, dupl.rect, dupl.rect)
     --  put glgtimgQuad+[point(108,108),point(108,108),point(108,108),point(108,108)]
+    era = image(member("lightImage").image.width, member("lightImage").image.height, 1)
+    member("lightImage").image.copypixels(era, member("lightImage").image.rect, era.rect)
     member("lightImage").image.copypixels(dupl, glgtimgQuad, dupl.rect)
     glgtimgQuad = [point(0,0), point(member("lightImage").image.width,0), point(member("lightImage").image.width,member("lightImage").image.height), point(0,member("lightImage").image.height)]
     
@@ -78,9 +86,15 @@ on exitFrame me
     end if
     
     if _key.keyPressed("J") and _movie.window.sizeState <> #minimized then
-      gLightEProps.lightAngle = restrict( gLightEProps.lightAngle -1, 90, 180)
+      gLightEProps.lightAngle = restrict( gLightEProps.lightAngle -1, 0, 360)--( gLightEProps.lightAngle -1, 90, 180)
+      if gLightEProps.lightAngle = 0 then
+        gLightEProps.lightAngle = 360
+      end if
     else if _key.keyPressed("L") and _movie.window.sizeState <> #minimized then
-      gLightEProps.lightAngle = restrict( gLightEProps.lightAngle +1, 90, 180)
+      gLightEProps.lightAngle = restrict( gLightEProps.lightAngle +1, 0, 360)--( gLightEProps.lightAngle +1, 90, 180)
+      if gLightEProps.lightAngle = 360 then
+        gLightEProps.lightAngle = 0
+      end if
     end if
     
     if geverysecond then
@@ -98,7 +112,7 @@ on exitFrame me
   end if
   
   
-  l = ["pxl", "bigCircle", "leaves", "oilyLight", "directionalLight", "blobLight1", "blobLight2", "wormsLight", "crackLight", "squareishLight", "holeLight", "roundedRectLight"]
+  l = ["pxl", "squareLightEmpty", "bigCircle", "discLightEmpty", "leaves", "oilyLight", "directionalLight", "blobLight1", "blobLight2", "wormsLight", "crackLight", "squareishLight", "holeLight", "roundedRectLight", "roundedRectLightEmpty", "triangleLight", "triangleLightEmpty", "curvedTriangleLight", "curvedTriangleLightEmpty", "pentagonLight", "pentagonLightEmpty", "hexagonLight", "hexagonLightEmpty", "octagonLight", "octagonLightEmpty", "DR1DestLight", "DR2DestLight", "DR3DestLight"]
   curr = 1
   repeat with s = 1 to l.count then
     if l[s]=gLightEProps.paintShape then
@@ -116,8 +130,8 @@ on exitFrame me
   
   if mv <> 0 then
     curr = restrict(curr + mv, 1, l.count)
-    sprite(11).member = member(l[curr])
-    sprite(12).member = member(l[curr])
+    sprite(181).member = member(l[curr])
+    sprite(182).member = member(l[curr])
     gLightEProps.paintShape = l[curr]
   end if
   
@@ -133,7 +147,7 @@ on exitFrame me
   
   angleAdd = degToVec(gLightEProps.lightAngle)*(gLightEProps.flatNess*10)--*2.8*(gLightEProps.flatNess+1)*10
   
-  dspPos = point((1024/2)-(member("lightImage").image.width/2), (768/2)-(member("lightImage").image.height/2))
+  dspPos = point((1366/2)-(member("lightImage").image.width/2), (768/2)-(member("lightImage").image.height/2))
   
   dspPos = dspPos - point(150, 150)
   
@@ -154,33 +168,31 @@ on exitFrame me
   
   
   
-  sprite(11).quad = q - [gLEProps.camPos*20, gLEProps.camPos*20,gLEProps.camPos*20, gLEProps.camPos*20]
-  sprite(12).quad = q - [gLEProps.camPos*20, gLEProps.camPos*20,gLEProps.camPos*20, gLEProps.camPos*20]
-  sprite(11).color = color((1-gLightEProps.col)*255, (1-gLightEProps.col)*255, (1-gLightEProps.col)*255)
+  sprite(181).quad = q - [gLEProps.camPos*20, gLEProps.camPos*20,gLEProps.camPos*20, gLEProps.camPos*20]
+  sprite(182).quad = q - [gLEProps.camPos*20, gLEProps.camPos*20,gLEProps.camPos*20, gLEProps.camPos*20]
+  sprite(181).color = color((1-gLightEProps.col)*255, (1-gLightEProps.col)*255, (1-gLightEProps.col)*255)
   
-  sprite(10).quad = glgtimgQuad - [gLEProps.camPos*20, gLEProps.camPos*20,gLEProps.camPos*20, gLEProps.camPos*20] + [dspPos, dspPos, dspPos, dspPos]
+  sprite(180).quad = glgtimgQuad - [gLEProps.camPos*20, gLEProps.camPos*20,gLEProps.camPos*20, gLEProps.camPos*20] + [dspPos, dspPos, dspPos, dspPos]
   
-  sprite(15).rect = rect(point(850, 700), point(850, 700)) + rect(-50, -50, 50, 50)
+  sprite(185).rect = rect(point(850, 650), point(850, 650)) + rect(-50, -50, 50, 50)
   
   rad = gLightEProps.flatNess*10--*0.1*50
   
-  sprite(16).rect = rect(point(850, 700), point(850, 700)) + rect(-rad, -rad, rad, rad)
-  sprite(17).loc = point(850, 700) - degToVec(gLightEProps.lightAngle)*rad
+  sprite(186).rect = rect(point(850, 650), point(850, 650)) + rect(-rad, -rad, rad, rad)
+  sprite(187).loc = point(850, 650) - degToVec(gLightEProps.lightAngle)*rad
   
   
-  sprite(6).loc = point(1024/2, 768/2) - point(150, 150) + (angleAdd*2) - gLEProps.camPos*20
-  sprite(9).loc = point(1024/2, 768/2) - point(150, 150) - gLEProps.camPos*20
+  sprite(176).loc = point(1366/2, 768/2) - point(150, 150) + (angleAdd*2) - gLEProps.camPos*20
+  sprite(179).loc = point(1366/2, 768/2) - point(150, 150) - gLEProps.camPos*20
   
-  sprite(5).loc = point(1024/2, 768/2) - gLEProps.camPos*20 
-  sprite(8).loc = point(1024/2, 768/2) - gLEProps.camPos*20
+  sprite(175).loc = point(1366/2, 768/2) - gLEProps.camPos*20 
+  sprite(178).loc = point(1366/2, 768/2) - gLEProps.camPos*20
   
   -- sprite(18).rect = 
   
   script("levelOverview").goToEditor()
   go the frame
 end
-
-
 
 
 

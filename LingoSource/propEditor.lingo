@@ -3,9 +3,16 @@
 global gLEProps, TEdraw, gDirectionKeys, gLOprops, gPEprops, gProps, gPEblink, gPEcounter, peScrollPos, peSavedRotat, peSavedFlip, peFreeQuad, peMousePos, lastPeMouse, mouseStill, propSettings, editSettingsProp, peSavedStretch
 
 
-global ropeModel, settingsPropType, gPEcolors, closestProp, longPropPlacePos, snapToGrid
+global ropeModel, settingsPropType, gPEcolors, closestProp, longPropPlacePos, snapToGrid, preciseSnap, stg, ps, showControls
 
 on exitFrame me
+  if (showControls) then
+    sprite(261).blend = 100
+  else
+    sprite(261).blend = 0
+  end if
+  
+  script("levelOverview").exitFrame(me)
   lastPeMouse = peMousePos
   gPEblink = gPEblink + 1
   if(gPEblink > 800)then
@@ -17,9 +24,9 @@ on exitFrame me
   end if
   
   if(editSettingsProp < 0)then
-    member("tileMenu").alignment = #left
+    member("propMenu").alignment = #left
   else
-    member("tileMenu").alignment = #center
+    member("propMenu").alignment = #center
   end if
   
   if((IsDecal(gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV]) = 0)and(propPlaceLayer() <= 5)and(propPlaceLayer() + gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].depth >= 6))then
@@ -28,22 +35,22 @@ on exitFrame me
     
     
     if (gPEblink < 600)then
-      sprite(18).visibility = true
+      sprite(267).visibility = true
     else
-      sprite(18).visibility = false
+      sprite(267).visibility = false
     end if
     if(gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].tp = "antimatter")then
       member("Prop editor warning text").text = "Antimatter prop intersecting play layer - remember to use a restore effect on affected play relevant terrain"
-      sprite(17).color = color(255,255,255)
-      sprite(18).color = color(255,255,255)
+      sprite(266).color = color(255,255,255)
+      sprite(267).color = color(255,255,255)
     else
       member("Prop editor warning text").text = "WARNING - this prop will intersect with the play layer!"
-      sprite(17).color = color(255, 0, 0)
-      sprite(18).color = color(255, 0, 0)
+      sprite(266).color = color(255, 0, 0)
+      sprite(267).color = color(255, 0, 0)
     end if
   else
-    sprite(18).visibility = false
-    sprite(17).color = color(255,255,255)
+    sprite(267).visibility = false
+    sprite(266).color = color(255,255,255)
   end if
   
   repeat with q = 1 to 4 then
@@ -76,7 +83,7 @@ on exitFrame me
   end repeat
   
   
-  sprite(8).visibility = false
+  sprite(257).visibility = false
   
   script("levelOverview").goToEditor()
   
@@ -150,14 +157,14 @@ on exitFrame me
     end if
     if gPEprops.color = 0 then
       member("Prop Color Text").text = "PROP COLOR: " &"NONE"
-      sprite(21).color = color(150, 150, 150)
+      sprite(270).color = color(150, 150, 150)
     else
       member("Prop Color Text").text = "PROP COLOR: " & gPEcolors[gPEprops.color][1]
-      sprite(21).color = gPEcolors[gPEprops.color][2]
+      sprite(270).color = gPEcolors[gPEprops.color][2]
     end if
   end if
   if(gPEprops.color = 1)then
-    sprite(21).color = color(random(255), random(255), random(255))
+    sprite(270).color = color(random(255), random(255), random(255))
   end if
   
   if checkKey("N") then
@@ -247,6 +254,13 @@ on exitFrame me
   actn1 = 0
   actn2 = 0
   
+  if member("propMenu").text = member("propBaseMenu").text then
+    if _mouse.mouseDown and _movie.window.sizeState <> #minimized then
+      editSettingsProp = -1
+      updatePropMenu(point(0, 0))
+    end if
+  end if
+  
   gPEprops.keys.m1 = _mouse.mouseDown and _movie.window.sizeState <> #minimized
   if (gPEprops.keys.m1)and(gPEprops.lastKeys.m1=0) then
     actn1 = 1
@@ -293,14 +307,14 @@ on exitFrame me
   
   
   if _key.keyPressed("C") and _key.keyPressed("X") and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
-    sprite(19).visible = true
-    sprite(19).color = color(random(255), 0, 0)
+    sprite(268).visible = true
+    sprite(268).color = color(random(255), 0, 0)
     if(actn1)and(_mouse.mouseLoc.inside(rect(25,25,52,52)))then
       clearAllProps()
     end if
     actn1 = 0
   else
-    sprite(19).visible = false
+    sprite(268).visible = false
   end if
   
   if checkKey("L") then
@@ -312,27 +326,27 @@ on exitFrame me
     
     
     if gPEprops.workLayer = 2 then
-      sprite(1).blend = 40
-      sprite(2).blend = 40
+      sprite(250).blend = 40
+      sprite(251).blend = 40
       
-      sprite(3).blend = 90
-      sprite(4).blend = 90
-      sprite(5).blend = 10
-      sprite(6).blend = 10
+      sprite(252).blend = 90
+      sprite(253).blend = 90
+      sprite(254).blend = 10
+      sprite(255).blend = 10
     else if gPEprops.workLayer = 1 then
-      sprite(1).blend = 20
-      sprite(2).blend = 20
-      sprite(3).blend = 40
-      sprite(4).blend = 40
-      sprite(5).blend = 90
-      sprite(6).blend = 90
+      sprite(250).blend = 20
+      sprite(251).blend = 20
+      sprite(252).blend = 40
+      sprite(253).blend = 40
+      sprite(254).blend = 90
+      sprite(255).blend = 90
     else
-      sprite(1).blend = 90
-      sprite(2).blend = 90
-      sprite(3).blend = 10
-      sprite(4).blend = 10
-      sprite(5).blend = 10
-      sprite(6).blend = 10
+      sprite(250).blend = 90
+      sprite(251).blend = 90
+      sprite(252).blend = 10
+      sprite(253).blend = 10
+      sprite(254).blend = 10
+      sprite(255).blend = 10
     end if
     
     updateWorkLayerText()
@@ -359,25 +373,50 @@ on exitFrame me
     perp = giveDirFor90degrToLine(-dir, dir)
   end if
   
+  --  if _key.keyPressed(56) and _movie.window.sizeState <> #minimized and preciseSnap = 0 then
+  --    preciseSnap = 1
+  --    waitSeconds(1)
+  --  else if _key.keyPressed(56) and _movie.window.sizeState <> #minimized and preciseSnap = 1 then
+  --    preciseSnap = 0
+  --    snapToGrid = 1
+  --  end if
+  
   if (_key.keyPressed("U")=0)and(_key.keyPressed("I")=0)and(_key.keyPressed("O")=0)and(_key.keyPressed("P")=0)and(_key.keyPressed("X")=0) then
     peMousePos = _mouse.mouseLoc
+    if(preciseSnap)then
+      peMousePos.loch = ((peMousePos.locH / 8.0)-0.4999).integer * 8
+      peMousePos.locv = ((peMousePos.locv / 8.0)-0.4999).integer * 8
+      --point(((gProps[gPEprops.tmPos.locH].tls[gPEprops.tmPos.locV].sz.locH*0.5)+0.4999).integer,((gProps[gPEprops.tmPos.locH].tls[gPEprops.tmPos.locV].sz.locV*0.5)+0.4999).integer)
+    end if
     if(snapToGrid)then
       peMousePos.loch = ((peMousePos.locH / 16.0)-0.4999).integer * 16
       peMousePos.locv = ((peMousePos.locv / 16.0)-0.4999).integer * 16
     end if
   end if
   
+  if snapToGrid = 0 and preciseSnap = 0 then
+    member("buttonSnapText").text = "None"
+  else if snapToGrid = 1 and preciseSnap = 0 then
+    member("buttonSnapText").text = "Snap To Grid"
+  else if preciseSnap = 1 and snapToGrid = 0 then
+    member("buttonSnapText").text = "Precise Snap"
+  else if preciseSnap = 1 and snapToGrid = 1 then
+    member("buttonSnapText").text = "Both tags active, remove one"
+  end if
   
+  prop = VOID
+  if (gPEprops.pmPos.locH <= gProps.count) and (gPEprops.pmPos.locH > 0) and (gPEprops.pmPos.locV > 0) and (gPEprops.pmPos.locV <= gProps[gPEprops.pmPos.locH].prps.count) then
+    prop = gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV]
+  end if
   
-  
-  if (gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].tp = "long")then
+  if (prop <> VOID) and (prop.tp = "long")then
     if(longPropPlacePos = void)then
       gPEprops.propRotation = 0
       gPEprops.propStretchX = 1
       gPEprops.propStretchY = 1
       gPEprops.propFlipX = 1
       gPEprops.propFlipY = 1
-      if(actn1)then
+      if(actn1)and(_mouse.mouseLoc.inside(rect(16, 16, 848, 656)))then
         longPropPlacePos = peMousePos + (point(-16, -16) + gLEProps.camPos*16)
         actn1 = 0
       end if
@@ -388,7 +427,7 @@ on exitFrame me
       gPEprops.propStretchY = 1
       gPEprops.propFlipX = 1
       gPEprops.propFlipY = 1
-      if(actn1)then
+      if(actn1)and(_mouse.mouseLoc.inside(rect(16, 16, 848, 656)))then
         longPropPlacePos = void
       end if
     end if
@@ -422,7 +461,7 @@ on exitFrame me
     offSetPnt = point(16, 16) - gLEProps.camPos*16
     qd = qd + [offSetPnt, offSetPnt, offSetPnt, offSetPnt]
     if(closestProp <> lastClosest)then
-      sprite(15).member = propPreviewMember(gProps[gPEprops.props[closestProp][3].locH].prps[gPEprops.props[closestProp][3].locV])
+      sprite(264).member = propPreviewMember(gProps[gPEprops.props[closestProp][3].locH].prps[gPEprops.props[closestProp][3].locV])
       if(["variedDecal", "variedSoft", "variedStandard"].getPos(gProps[gPEprops.props[closestProp][3].locH].prps[gPEprops.props[closestProp][3].locV].tp)>0)then
         if closestProp = 0 then
           var = propSettings.variation
@@ -433,18 +472,18 @@ on exitFrame me
       end if
     end if
     
-    sprite(17).loc = point(-100, -100)
+    sprite(266).loc = point(-100, -100)
     
     if _key.keyPressed("V") and _movie.window.sizeState <> #minimized then
-      sprite(15).color = color(255,0,0)
-      sprite(15).foreColor = 6
+      sprite(264).color = color(255,0,0)
+      sprite(264).foreColor = 6
       if(actn1) then
         gPEprops.props.deleteAt(closestProp)
         renderPropsImage()
       end if
     else  if _key.keyPressed("B") and _movie.window.sizeState <> #minimized then
-      sprite(15).color = color(0,255,255)
-      sprite(15).foreColor = color(255, 255, 255)
+      sprite(264).color = color(0,255,255)
+      sprite(264).foreColor = color(255, 255, 255)
       if(actn1) then
         gPEprops.pmPos = gPEprops.props[closestProp][3]
         updatePropMenu(point(0, 0))
@@ -455,11 +494,11 @@ on exitFrame me
         editSettingsProp = -1
       end if
     else   if (editSettingsProp > 0) then
-      sprite(15).color = color(0,255,0)
-      sprite(15).foreColor = 187
+      sprite(264).color = color(0,255,0)
+      sprite(264).foreColor = 187
     else if _key.keyPressed("M") and _movie.window.sizeState <> #minimized then
-      sprite(15).color = color(0,0,255)
-      sprite(15).foreColor = 62
+      sprite(264).color = color(0,0,255)
+      sprite(264).foreColor = 62
       if(actn1) then
         editSettingsProp = closestProp
         propSettings = gPEprops.props[closestProp][5].settings
@@ -468,9 +507,9 @@ on exitFrame me
       end if
     end if
     if(editSettingsProp < 1)then
-      sprite(15).blend = restrict(50 + 50*sin((gPEblink/800.0)*PI*4.0), 0, 100)
+      sprite(264).blend = restrict(50 + 50*sin((gPEblink/800.0)*PI*4.0), 0, 100)
     else
-      sprite(15).blend = restrict(50 + 50*sin((gPEblink/800.0)*PI*8.0), 0, 100)
+      sprite(264).blend = restrict(50 + 50*sin((gPEblink/800.0)*PI*8.0), 0, 100)
     end if
   else
     mem = propPreviewMember(gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV])
@@ -497,18 +536,18 @@ on exitFrame me
     
     qd = qd + peFreeQuad
     
-    if(actn1)and(_mouse.mouseLoc.inside(rect(16, 16, 848, 656))) then
+    if(actn1)and(_mouse.mouseLoc.inside(rect(16, 16, 848, 656)))then
       offSetPnt = point(-16, -16) + gLEProps.camPos*16
       placeProp(qd + [offSetPnt, offSetPnt, offSetPnt, offSetPnt])
     end if
-    sprite(15).blend = 50
-    sprite(15).color = color(0,0,0)
-    sprite(15).foreColor = 255
-    sprite(15).member = mem
-    sprite(17).loc = peMousePos + point(40, 20)
+    sprite(264).blend = 50
+    sprite(264).color = color(0,0,0)
+    sprite(264).foreColor = 255
+    sprite(264).member = mem
+    sprite(266).loc = peMousePos + point(40, 20)
   end if
   
-  sprite(15).quad = qd
+  sprite(264).quad = qd
   
   if((gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].tp = "rope"))then
     viewRope = false
@@ -538,10 +577,10 @@ on exitFrame me
       viewRope = true 
     end if
     
-    sprite(20).visibility = viewRope
+    sprite(269).visibility = viewRope
   else
     ropeFrames = 0
-    sprite(20).visibility = false
+    sprite(269).visibility = false
   end if
   
   go the frame
@@ -597,6 +636,31 @@ on updateCursorText()
   member("Prop Depth Text").text = txt
 end
 
+--on updateCursorTextWhenClosestProp()
+--  repeat with p = 1 to gPEprops.props.count then
+--    pos = (gPEprops.props[p][5][2][1]
+--    -- pos = pos * 20.0/16.0
+--    if(diag(offSetMousePnt, pos) < smallestDist)then
+--      smallestDist = diag(offSetMousePnt, pos)
+--      closestProp = p
+--    end if
+--  end repeat
+--  txt = "Prop depth: " & propPlaceLayer() & " to " & (propPlaceLayer() +  gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].depth)
+--  if(propSettings <> void)then
+--    if (propSettings.findPos(#variation) <> void) then
+--      put RETURN after txt
+--      put "Variation: " after txt
+--      if (propSettings.variation = 0)then
+--        put "Random" after txt
+--      else
+--        put propSettings.variation after txt
+--      end if
+--    end if
+--  end if
+--  
+--  member("Prop Depth Text").text = txt
+--end
+
 on propPlaceLayer()
   return ((gPEprops.workLayer-1) * 10) + gPEprops.depth
 end
@@ -605,12 +669,14 @@ on placeProp(qd)
   -- member("propsImage").image.copyPixels(mem.image, qd, mem.image.rect, {#ink:36})
   prop = [-propPlaceLayer(), gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].nm, gPEprops.pmPos, qd, [#settings:propSettings.duplicate()]]
   
+  -- if(prop[5] <> void) then
   if(prop[5].settings.findpos(#color) <> void) then
     if gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].tags.getPos("customColorRainBow") > 0 then
       gPEprops.color = 1
     end if
     prop[5].settings.color = gPEprops.color
   end if
+  -- end if
   
   case (gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].tp)of
     "rope":
@@ -700,7 +766,23 @@ on renderPropsImage()
       
       
     else
-      member("propsImage2").image.copyPixels(mem.image, prop[4]-camPosQuad, mem.image.rect, {#ink:36, #blend:blnd, #color:clr})
+      case (propData.tp) of   
+        "rope":
+          member("propsImage2").image.copyPixels(mem.image, prop[4]-camPosQuad, mem.image.rect, {#ink:36, #blend:blnd, #color:clr})
+          q = 1
+          repeat while q < prop[5].points.count then
+            adaptedPos = prop[5].points[q]
+            adaptedPos = adaptedPos - gLEProps.camPos*20.0
+            adaptedPos = adaptedPos * 16.0/20.0
+            member("propsImage2").image.copyPixels(member("pxl").image, rect(adaptedPos-point(1,1), adaptedPos+point(2,2)), rect(0,0,1,1), {#color:propData.previewColor})
+            q = q + propData.previewEvery
+          end repeat
+        "variedDecal", "variedSoft", "variedStandard":
+          updateVariedPreview(propData, prop[5].settings.variation)
+          member("propsImage2").image.copyPixels(mem.image, prop[4]-camPosQuad, mem.image.rect, {#ink:36, #blend:blnd, #color:clr})
+        otherwise:
+          member("propsImage2").image.copyPixels(mem.image, prop[4]-camPosQuad, mem.image.rect, {#ink:36, #blend:blnd, #color:clr})
+      end case
     end if
   end repeat
   
@@ -708,8 +790,10 @@ on renderPropsImage()
     member("propsImage").image.copyPixels(member("pxl").image, rect(0,0,52*16, 40*16),rect(0,0,1,1), {#blend:10, #color:color(255, 255, 255)})
   end repeat
   
-  if(["variedDecal", "variedSoft", "variedStandard"].getPos(gProps[gPEprops.pmpos.locH].prps[gPEprops.pmPos.locV].tp) > 0) then
-    updateVariedPreview(gProps[gPEprops.pmpos.locH].prps[gPEprops.pmPos.locV], propSettings.variation)
+  if (propSettings <> void)then
+    if(["variedDecal", "variedSoft", "variedStandard"].getPos(gProps[gPEprops.pmpos.locH].prps[gPEprops.pmPos.locV].tp) > 0) then
+      updateVariedPreview(gProps[gPEprops.pmpos.locH].prps[gPEprops.pmPos.locV], propSettings.variation)
+    end if
   end if
 end
 
@@ -732,7 +816,80 @@ on IsDecal(prop)
   end if
 end
 
+--on updateTileMenu(mv)
+--  if(mv = void)or(mv = script("tileEditor"))then
+--    mv = point(0,0)
+--  end if
+--  
+--  gTEprops.tmPos = gTEprops.tmPos + mv
+--  if mv.locH <> 0 then
+--    if gTEprops.tmPos.locH < 1 then
+--      gTEprops.tmPos.locH = gTiles.count
+--    else if gTEprops.tmPos.locH > gTiles.count then
+--      gTEprops.tmPos.locH = 1
+--    end if 
+--    gTEprops.tmPos.locV = gTEprops.tmSavPosL[gTEprops.tmPos.locH]
+--  else if mv.locV <> 0 then
+--    if gTEprops.tmPos.locV < 1 then
+--      gTEprops.tmPos.locV = gTiles[gTEprops.tmPos.locH].tls.count
+--    else if gTEprops.tmPos.locV > gTiles[gTEprops.tmPos.locH].tls.count then
+--      gTEprops.tmPos.locV = 1
+--    end if
+--    gTEprops.tmSavPosL[gTEprops.tmPos.locH] = gTEprops.tmPos.locV
+--  end if
+--  
+--  gTEprops.tmPos.locH = restrict(gTEprops.tmPos.locH, 1, gTiles.count)
+--  gTEprops.tmPos.locV = restrict(gTEprops.tmPos.locV, 1, gTiles[gTEprops.tmPos.locH].tls.count)
+--  
+--  txt = ""
+--  put "[" && gTiles[gTEprops.tmPos.locH].nm && "]" after txt
+--  put RETURN after txt
+--  
+--  repeat with tl = 1 to gTiles[gTEprops.tmPos.locH].tls.count then
+--    if tl = gTEprops.tmPos.locV then
+--      put "-" && gTiles[gTEprops.tmPos.locH].tls[tl].nm && "-" && RETURN after txt
+--    else
+--      put gTiles[gTEprops.tmPos.locH].tls[tl].nm && RETURN after txt
+--    end if
+--  end repeat
+--  
+--  member("tileMenu").text = txt
+--  
+--  
+--  if gTiles[gTEprops.tmPos.locH].nm = "materials" then
+--    sprite(19).visibility = 1
+--    gTEprops.toolType = "material"
+--    gTEprops.toolData = gTiles[gTEprops.tmPos.locH].tls[gTEprops.tmPos.locV].nm
+--    member("tilePreview").image = image(1,1,1)
+--    if _key.keyPressed("E") and _movie.window.sizeState <> #minimized then
+--      if  gTEprops.defaultMaterial <> gTiles[gTEprops.tmPos.locH].tls[gTEprops.tmPos.locV].nm then
+--        gTEprops.defaultMaterial = gTiles[gTEprops.tmPos.locH].tls[gTEprops.tmPos.locV].nm
+--        --  put "set" &&     gTEprops.defaultMaterial && "as default material"
+--        member("default material").text = "Default material:" && gTEprops.defaultMaterial && "(Press 'E' to change)"
+--      end if
+--    end if
+--  else if gTiles[gTEprops.tmPos.locH].nm = "special" then
+--    gTEprops.toolType = "special"
+--    gTEprops.toolData = gTiles[gTEprops.tmPos.locH].tls[gTEprops.tmPos.locV].nm
+--    member("tilePreview").image = image(1,1,1)
+--  else
+--    if gTEprops.specialEdit = 0 then
+--      sprite(19).visibility = 0
+--    end if
+--    gTEprops.toolType = "tile"
+--    gTEprops.toolData = "TILE"--gTEprops.tmPos--gTiles[gTEprops.tmPos.locH].tls[gTEprops.tmPos.locV]
+--    drawTilePreview()
+--  end if
+--  
+--  isTilePositionLegal(gTEprops.lstMsPs)
+--  
+--end
+
 on updatePropMenu(mv)
+  
+  if(mv = void)or(mv = script("propEditor"))then
+    mv = point(0,0)
+  end if
   
   gPEprops.pmPos = gPEprops.pmPos + mv
   if mv.locH <> 0 then
@@ -775,18 +932,25 @@ on updatePropMenu(mv)
     end if
   end repeat
   
-  if(gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].notes.count > 0)then
+  prp = VOID
+  if (gPEprops.pmPos.locH <= gProps.count) and (gPEprops.pmPos.locH > 0) and (gPEprops.pmPos.locV > 0) and (gPEprops.pmPos.locV <= gProps[gPEprops.pmPos.locH].prps.count) then
+    prp = gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV]
+  end if
+  
+  if (prp <> VOID) and (prp.notes.count > 0) then
     put RETURN after txt
     put RETURN after txt
     put "NOTES" after txt
     put RETURN after txt
-    repeat with nt in gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].notes then
+    repeat with nt in prp.notes then
       put nt after txt
       put RETURN after txt
     end repeat
   end if
   
-  member("tileMenu").text = txt
+  member("propMenu").text = txt
+  --editSettingsProp = -1
+  --updatePropMenu(point(0, 0))
   
   -- put "propPreview TestProp" && gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].nm
   newPropSelected()
@@ -883,9 +1047,9 @@ on updatePropSettings(mv)
         end if
       "renderTime":
         if(p = 0)then
-          t = "Pre Effcts"
+          t = "Pre Effects"
         else
-          t = "Post Effcts"
+          t = "Post Effects"
         end if
       "variation":
         if(propSettings[st] = 0)then
@@ -918,17 +1082,19 @@ on updatePropSettings(mv)
     put RETURN after txt
   end repeat
   
-  member("tileMenu").text = txt
+  member("propMenu").text = txt
   
   -- put "propPreview TestProp" && gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].nm
   -- newPropSelected()
-  
 end
 
 on newPropSelected()
   resetTransformation()
   DuplicatePropSettings()
-  prop = gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV]
+  prop = VOID
+  if (gPEprops.pmPos.locH <= gProps.count) and (gPEprops.pmPos.locH > 0) and (gPEprops.pmPos.locV > 0) and (gPEprops.pmPos.locV <= gProps[gPEprops.pmPos.locH].prps.count) then
+    prop = gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV]
+  end if
   if(peSavedRotat <> -1)then
     gPEprops.propRotation = peSavedRotat
   end if
@@ -951,28 +1117,44 @@ on newPropSelected()
   
   propSettings.renderTime = 0
   snapToGrid = 0
-  
-  repeat with q = 1 to prop.tags.count then
-    case prop.tags[q] of
-      "postEffects":
-        propSettings.renderTime = 1
-      "snapToGrid":
-        snapToGrid = 1
-    end case
-  end repeat
-  
-  
-  ApplyTransformationTags()
-  
-  if(prop.tp = "rope")then
-    resetRopeProp()
+  preciseSnap = 0
+  if stg = 1 then
+    snapToGrid = 1
+  end if
+  if ps = 1 then
+    preciseSnap = 1 
   end if
   
-  if(["variedDecal", "variedSoft", "variedStandard"].getPos(prop.tp)>0)then
-    updateVariedPreview(prop, propSettings.variation)
+  if (prop <> VOID) then
+    repeat with q = 1 to prop.tags.count then
+      case prop.tags[q] of
+        "postEffects":
+          propSettings.renderTime = 1
+        "snapToGrid":
+          snapToGrid = 1
+        "preciseSnap":
+          preciseSnap = 1
+      end case
+    end repeat
+    
+    --if(prop.tags.GetPos("droughtReserve") > 0)then
+    -- member("Drought Reserve text").text = "THIS PROP IS IN DROUGHT RESERVE, SEE THE IMPORTANT INFO FILE FOR THE CONDITIONS TO USE IT."
+    --else
+    member("Drought Reserve text").text = ""
+    --end if
+    
+    ApplyTransformationTags()
+    
+    if(prop.tp = "rope")then
+      resetRopeProp()
+    end if
+    
+    if(["variedDecal", "variedSoft", "variedStandard"].getPos(prop.tp)>0)then
+      updateVariedPreview(prop, propSettings.variation)
+    end if
+    
+    updateWorkLayerText()
   end if
-  
-  updateWorkLayerText()
 end
 
 
@@ -1025,7 +1207,7 @@ on resetTransformation()
   if(peSavedFlip.locV <> 0)then
     gPEprops.propFlipY  = peSavedFlip.locV
   end if
-    if(peSavedStretch.locH <> 0)then
+  if(peSavedStretch.locH <> 0)then
     gPEprops.propStretchX  = peSavedStretch.locH
   end if
   if(peSavedStretch.locV <> 0)then
@@ -1091,11 +1273,25 @@ end
 on updateVariedPreview(prop, var)
   mem = propPreviewMember(prop)
   
+  tileAsProp = 0
+  repeat with q = 1 to prop.tags.count then
+    if prop.tags[q] = "Tile" then
+      tileAsProp = 1
+      exit repeat
+    end if
+  end repeat
   
   imprtMem = member("previewImprt")
-  member("previewImprt").importFileInto("Props" & the dirSeparator &prop.nm&".png")
+  if(tileAsProp)then
+    member("previewImprt").importFileInto("Graphics\" &prop.nm&".png")
+  else
+    member("previewImprt").importFileInto("Props\" &prop.nm&".png")
+  end if
   imprtMem.name = "previewImprt"
-  
+  --INTERNAL
+  if (checkDRInternal(prop.nm)) then
+    imprtMem.image = member(prop.nm).image
+  end if
   
   if prop.tp = "variedStandard" then
     sz = prop.sz*20.0
@@ -1104,13 +1300,33 @@ on updateVariedPreview(prop, var)
   end if
   
   mem.image = image(sz.locH, sz.locV, 16)
-  if(var = 0)then
-    repeat with v2 = 1 to prop.vars then
-      mem.image.copyPixels(imprtMem.image, mem.image.rect, rect(sz.locH * (v2-1), 0, sz.locH * v2, sz.locV)+rect(0,1,0,1), {#ink:36})
-    end repeat
+  if prop.tp = "variedStandard" then
+    if(var = 0) then
+      repeat with v2 = 1 to prop.vars then
+        repeat with c = 1 to prop.repeatL.count then
+          c2 = prop.repeatL.count + 1 - c
+          getRect = rect(prop.sz.locH*20*(v2-1), (c2-1)*prop.sz.locV*20, prop.sz.locH*20*v2, c2*prop.sz.locV*20)+rect(0,1,0,1)
+          mem.image.copyPixels(member("pxl").image, mem.image.rect, rect(0,0,1,1), {#color:color(255, 255, 255), #blend:80.0/prop.repeatL.count})
+          mem.image.copyPixels(imprtMem.image, mem.image.rect, getRect, {#ink:36})
+        end repeat
+      end repeat
+    else
+      repeat with c = 1 to prop.repeatL.count then
+        c2 = prop.repeatL.count + 1 - c
+        getRect = rect(prop.sz.locH*20*(var-1), (c2-1)*prop.sz.locV*20, prop.sz.locH*20*var, c2*prop.sz.locV*20)+rect(0,1,0,1)
+        mem.image.copyPixels(member("pxl").image, mem.image.rect, rect(0,0,1,1), {#color:color(255, 255, 255), #blend:80.0/prop.repeatL.count})
+        mem.image.copyPixels(imprtMem.image, mem.image.rect, getRect, {#ink:36})
+      end repeat
+    end if
   else
-    --   put rect(prop.pxlSize.locH * (var-1), 0, prop.pxlSize.locV, prop.pxlSize.locH * var)
-    mem.image.copyPixels(imprtMem.image, mem.image.rect, rect(sz.locH * (var-1), 0, sz.locH * var, sz.locV)+rect(0,1,0,1))
+    if(var = 0)then
+      repeat with v2 = 1 to prop.vars then
+        mem.image.copyPixels(imprtMem.image, mem.image.rect, rect(sz.locH * (v2-1), 0, sz.locH * v2, sz.locV)+rect(0,1,0,1), {#ink:36})
+      end repeat
+    else
+      --   put rect(prop.pxlSize.locH * (var-1), 0, prop.pxlSize.locV, prop.pxlSize.locH * var)
+      mem.image.copyPixels(imprtMem.image, mem.image.rect, rect(sz.locH * (var-1), 0, sz.locH * var, sz.locV)+rect(0,1,0,1))
+    end if
   end if
 end
 
@@ -1142,6 +1358,11 @@ on propPreviewMember(prop)
     member("previewImprt").importFileInto("Props" &the dirSeparator &prop.nm&".png")
   end if
   sav2.name = "previewImprt"
+  --INTERNAL
+  if (checkDRInternal(prop.nm)) then
+    sav2.image = member(prop.nm).image
+    member("previewImprt").image = member(prop.nm).image
+  end if
   
   newMem = new(#bitmap, castLib "customMems")
   
@@ -1156,7 +1377,7 @@ on propPreviewMember(prop)
         newMem.image.copyPixels(member("previewImprt").image, newMem.image.rect, getRect, {#ink:36})
       end repeat
       
-    "simpleDecal", "soft", "softEffect", "antimatter":
+    "simpleDecal", "soft", "softEffect", "antimatter", "coloredSoft":
       newMem.image = image(member("previewImprt").image.width, member("previewImprt").image.height, 16)
       newMem.image.copyPixels(member("previewImprt").image, newMem.image.rect, member("previewImprt").image.rect)
       
@@ -1167,10 +1388,12 @@ on propPreviewMember(prop)
     "variedStandard":
       newMem.image = image(prop.sz.locH*20*prop.vars, prop.sz.locV*20, 16)
       repeat with c = 1 to prop.repeatL.count then
+        --repeat with vari = 1 to prop.settings.variation then
         c2 = prop.repeatL.count + 1 - c
         getRect = rect(0, (c2-1)*prop.sz.locV*20, prop.sz.locH*20*prop.vars, c2*prop.sz.locV*20)+rect(0,1,0,1)
         newMem.image.copyPixels(member("pxl").image, newMem.image.rect, rect(0,0,1,1), {#color:color(255, 255, 255), #blend:80.0/prop.repeatL.count})
         newMem.image.copyPixels(member("previewImprt").image, newMem.image.rect, getRect, {#ink:36})
+        --end repeat
       end repeat
       
     "rope", "long":
@@ -1193,19 +1416,24 @@ end
 
 on DuplicatePropSettings()
   doIt = (settingsPropType = void)
-  
-  if(doIt = 0)then
-   -- put settingsPropType.nm && gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].nm
-    if (settingsPropType.nm <> gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].nm) then
-      doIt = 1
+  prp = VOID
+  if (gPEprops.pmPos.locH <= gProps.count) and (gPEprops.pmPos.locH > 0) and (gPEprops.pmPos.locV > 0) and (gPEprops.pmPos.locV <= gProps[gPEprops.pmPos.locH].prps.count) then
+    prp = gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV]
+  end if
+  if (prp <> VOID) then
+    if(doIt = 0)then
+      -- put settingsPropType.nm && prp.nm
+      if (settingsPropType.nm <> prp.nm) then
+        doIt = 1
+      end if
+    end if
+    if (doIt) then
+      propSettings = prp.settings.duplicate()
+      propSettings.seed = Random(1000)
+      settingsPropType = prp
     end if
   end if
-  if (doIt) then
-    propSettings = gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV].settings.duplicate()
-    propSettings.seed = Random(1000)
-    settingsPropType = gProps[gPEprops.pmPos.locH].prps[gPEprops.pmPos.locV]
-  end if
-end 
+end
 
 
 

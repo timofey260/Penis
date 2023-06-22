@@ -26,7 +26,10 @@ internal static class Program
         "levelRendering",
         "fiffigt",
         "TEdraw",
-        "FILE"
+        "FILE",
+        "comEditorUtils",
+        "LSlime",
+        "LMats"
     };
 
     public static readonly HashSet<string> ParentScripts = new()

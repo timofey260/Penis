@@ -3,6 +3,17 @@ global c, keepLooping, afterEffects, gLastImported, gRenderTrashProps, gCurrentl
 
 on exitFrame me
   type val: number
+  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+    _player.appMinimize()
+    
+  end if
+  if checkExit() then
+    _player.quit()
+  end if
+  if checkExitRender() then
+    _movie.go(9)
+  end if
+  
   c = 1
   keepLooping = 1
   --Set by LevelRenderer.cs now.
@@ -14,7 +25,7 @@ on exitFrame me
   end if
   
   repeat with q = 0 to 29 then
-    sprite(50-q).loc = point((1024/2)-q, (768/2)-q)
+    sprite(50-q).loc = point((1366/2)-q, (768/2)-q)
     val = (q.float+1.0)/30.0
     sprite(50-q).color = color(val*255, val*255, val*255)
   end repeat

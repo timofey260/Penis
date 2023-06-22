@@ -1,9 +1,10 @@
 global gTEprops, gTiles, gLEprops, gLOprops, gDirectionKeys
 
 on exitFrame me
---  repeat with q = 1 to 3 then
---    member("TEimg"&string(q)).image = image(16*gLOprops.size.loch, 16*gLOprops.size.locV, 16)
---  end repeat
+  _movie.exitLock = TRUE
+  --  repeat with q = 1 to 3 then
+  --    member("TEimg"&string(q)).image = image(16*gLOprops.size.loch, 16*gLOprops.size.locV, 16)
+  --  end repeat
   
   member("tileMenu").alignment = #left
   
@@ -53,12 +54,13 @@ on exitFrame me
   gTEprops.keys = l.duplicate()
   
   script("tileEditor").updateTileMenu(point(0,0))
- --call(#updateTileMenu, point(0,0))
+  --call(#updateTileMenu, point(0,0))
   
   gTEprops.tmSavPosL = []
   repeat with q = 1 to gTiles.count then
     gTEprops.tmSavPosL.add(1)
   end repeat
+  member("Drought Reserve text").text = ""
 end
 
 

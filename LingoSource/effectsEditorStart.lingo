@@ -1,15 +1,16 @@
 global gTEprops, gTiles, gEEprops, gLEprops, gLOprops, gEnvEditorProps
 
 on exitFrame me
+  _movie.exitLock = TRUE
   
-  sprite(15).color = color(255, 255, 255)
+  sprite(243).color = color(255, 255, 255)
   
   member("effectsMatrix").image = image(52,40,32)
   
-  sprite(3).blend = 30
-  sprite(4).blend = 50
-  sprite(5).blend = 70
-  sprite(6).blend = 100
+  sprite(212).blend = 30
+  sprite(213).blend = 50
+  sprite(214).blend = 70
+  sprite(215).blend = 100
   
   repeat with spr = 3 to 9 then
     sprite(spr).rect = rect(16,16,53*16, 41*16)
@@ -41,12 +42,12 @@ on exitFrame me
   
   gDirectionKeys = [0,0,0,0]
   
-  sprite(3).blend = 10
-  sprite(4).blend = 10
-  sprite(5).blend = 60
-  sprite(6).blend = 10
-  sprite(7).blend = 70
-  sprite(8).blend = 100
+  sprite(212).blend = 30
+  sprite(213).blend = 40
+  sprite(214).blend = 50
+  sprite(215).blend = 60
+  sprite(216).blend = 80
+  sprite(217).blend = 100
   
   
   --  sav = gLeProps.camPos
@@ -68,8 +69,9 @@ on exitFrame me
   script("effectsEditor").updateEffectsL(0)
   script("effectsEditor").initMode("createNew")
   -- script("effectsEditor").initMode("createNew")
-  
+  script("propEditor").renderPropsImage()
   script("effectsEditor").drawEfMtrx(gEEprops.editEffect)
+  member("Drought Reserve text").text = ""
 end
 
 

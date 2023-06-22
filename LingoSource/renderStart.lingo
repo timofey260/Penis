@@ -1,14 +1,31 @@
-global gTiles, tileSetIndex, gCurrentRenderCamera, gAnyDecals, firstCamRepeat, solidMtrx, gLOprops, gLEprops, gTEprops
-
+global gTiles, tileSetIndex, gCurrentRenderCamera, gAnyDecals, firstCamRepeat, solidMtrx, gLOprops, gLEprops, gTEprops, gDRMatFixes, gDRInvI, grimeActive, grimeOnGradients, bkgFix, gRRSpreadsMore, slimeFxt
+global DRWhite, DRPxl, DRPxlRect
 on exitFrame me
-  --type sav: string
-  type nonsolidtilesets: list
-  type l: list
-  type cell: list
-  type ad: number
-  --type tl: number
-  --type testmat: number
-
+  DRPxl = member("pxl").image
+  DRPxlRect = member("pxl").image.rect
+  DRWhite = color(255, 255, 255)
+  slimeFxt = getBoolConfig("Slime always affects editor decals")
+  gRRSpreadsMore = getBoolConfig("Rough Rock spreads more")
+  grimeActive = getBoolConfig("Grime")
+  grimeOnGradients = getBoolConfig("Grime on gradients")
+  bkgFix = getBoolConfig("Gradients with BackgroundScenes fix")
+  gDRMatFixes = getBoolConfig("Material fixes")
+  gDRInvI = getBoolConfig("Invisible material fix")
+  member("blackOutImg1").image = image(1, 1, 1)
+  member("blackOutImg2").image = image(1, 1, 1)
+  member("GradientOutput").image = image(1,1,1)
+  _movie.exitLock = TRUE
+  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+    _player.appMinimize()
+    
+  end if
+  if checkExit() then
+    _player.quit()
+  end if
+  if checkExitRender() then
+    _movie.go(9)
+  end if
+  
   put "Start render"
   
   gLOprops.pal = 1
@@ -19,20 +36,27 @@ on exitFrame me
   me.createShortCuts()
   
   tileSetIndex = []
-  repeat with q = 1 to gTiles[1].tls.count then
-    if gTiles[1].tls[q].renderType = "unified" then
-      member("tileSet"&string(q)).image = image(1,1,32)
-      sav = member("tileSet"&string(q))
-      member("tileSet"&string(q)).importFileInto("Graphics" & the dirSeparator & "tileSet" &  gTiles[1].tls[q].nm &".png")
-      sav.name = "tileSet"&string(q)
-      tileSetIndex.add(gTiles[1].tls[q].nm)
-    end if
-  end repeat
+  --repeat with q = 1 to gTiles[1].tls.count then
+  --    if gTiles[1].tls[q].renderType = "unified" then
+  --      member("tileSet"&string(q)).image = image(1,1,32)
+  --      sav = member("tileSet"&string(q))
+  --      member("tileSet"&string(q)).importFileInto("Graphics\tileSet" &  gTiles[1].tls[q].nm &".png")
+  --      sav.name = "tileSet"&string(q)
+  --      tileSetIndex.add(gTiles[1].tls[q].nm)
+  --    end if
+  --end repeat
   
   
   
   solidMtrx = []
-  nonSolidTileSets = ["Small Pipes", "Invisible", "Trash"]
+  if (getBoolConfig("Trash and Small pipes non solid")) then
+    nonSolidTileSets = ["Small Pipes", "Trash"]--"Invisible"
+  else
+    nonSolidTileSets = []
+  end if
+  if (gDRInvI = FALSE) then
+    nonSolidTileSets.add("Invisible")
+  end if
   repeat with q = 1 to gLOprops.size.loch then
     l = []
     repeat with c = 1 to gLOprops.size.locv then
@@ -55,8 +79,10 @@ on exitFrame me
             tlPs = tl.data[1]
             if tl.tp = "tileBody" then
               tlPs = void
-              if ilk(gTEprops.tlMatrix[tl.data[1].locH][tl.data[1].locV][tl.data[2]].data) = #list then
-                tlPs = gTEprops.tlMatrix[tl.data[1].locH][tl.data[1].locV][tl.data[2]].data[1]
+              if (tl.data[1].locV > 0) and (tl.data[1].locH > 0) and (tl.data[1].locV < gLOprops.size.locV) and (tl.data[1].locH < gLOprops.size.locH) then
+                if ilk(gTEprops.tlMatrix[tl.data[1].locH][tl.data[1].locV][tl.data[2]].data) = #list then
+                  tlPs = gTEprops.tlMatrix[tl.data[1].locH][tl.data[1].locV][tl.data[2]].data[1]
+                end if
               end if
             end if
             ad = 1

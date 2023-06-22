@@ -1,7 +1,15 @@
 global gLOprops, gPEprops, gDirectionKeys, gProps, gPEblink, peScrollPos, editSettingsProp
-global peFreeQuad, settingCursor, settingsPropType, peSavedFlip, gPEcolors, peSavedStretch
+global peFreeQuad, settingCursor, settingsPropType, peSavedFlip, gPEcolors, peSavedStretch, preciseSnap, snapToGrid, stg, ps
 
 on exitFrame me
+  preciseSnap = 0
+  snapToGrid = 0
+  stg = 0
+  ps = 0
+  _movie.exitLock = TRUE
+  
+  member("propMenu").alignment = #left
+  
   member("TEimg1").image = image(52*16, 40*16, 16)
   member("TEimg2").image = image(52*16, 40*16, 16)
   member("TEimg3").image = image(52*16, 40*16, 16)
@@ -11,7 +19,7 @@ on exitFrame me
   member("levelEditImageShortCuts").image = image(52*16, 40*16, 16)
   
   member("ropePreview").image = image(52*16, 40*16, 1)
-  sprite(20).loc = point(432, 336)
+  sprite(269).loc = point(432, 336)
   
   TEdraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 1)
   TEdraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 2)
@@ -23,35 +31,35 @@ on exitFrame me
   
   gDirectionKeys = [0,0,0,0]
   
-  sprite(1).blend = 20
-  sprite(2).blend = 20
-  sprite(3).blend = 40
-  sprite(4).blend = 40
-  sprite(5).blend = 90
-  sprite(6).blend = 90
+  sprite(250).blend = 20
+  sprite(251).blend = 20
+  sprite(252).blend = 40
+  sprite(253).blend = 40
+  sprite(254).blend = 90
+  sprite(255).blend = 90
   
-  sprite(8).blend = 80
-  sprite(8).visibility = 0
+  sprite(257).blend = 80
+  sprite(257).visibility = 0
   -- sprite(8).loc = point(432, 336) --+ point(-5, 5)--*(gTEprops.workLayer = 2)
   
   gPEprops.workLayer = 1
   
   
-  sprite(1).loc = point(432, 336)
-  sprite(2).loc = point(432, 336)
-  sprite(3).loc = point(432, 336)
-  sprite(4).loc = point(432, 336)
-  sprite(5).loc = point(432, 336)
-  sprite(6).loc = point(432, 336)
+  sprite(250).loc = point(432, 336)
+  sprite(251).loc = point(432, 336)
+  sprite(252).loc = point(432, 336)
+  sprite(253).loc = point(432, 336)
+  sprite(254).loc = point(432, 336)
+  sprite(255).loc = point(432, 336)
   
-  sprite(11).loc = point(432, 336)
-  sprite(13).loc = point(432, 336)
+  sprite(260).loc = point(432, 336)
+  sprite(262).loc = point(432, 336)
   
   l = [#w:0, #a:0, #s:0, #d:0, #L:0, #n:0, #m1:0, m2:0, #c:0, #z:0]
   gPEprops.lastKeys = l.duplicate()
   gPEprops.keys = l.duplicate()
   
-  --script("tileEditor").updateTileMenu(point(0,0))
+  --script("propEditor").updatePropMenu(point(0,0))
   
   peSavedFlip = point(0,0)
   peSavedStretch = point(0,0)
@@ -88,13 +96,15 @@ on exitFrame me
   
   if gPEprops.color = 0 then
     member("Prop Color Text").text = "PROP COLOR: " &"NONE"
-    sprite(21).color = color(150, 150, 150)
+    sprite(270).color = color(150, 150, 150)
   else
     member("Prop Color Text").text = "PROP COLOR: " & gPEcolors[gPEprops.color][1]
-    sprite(21).color = gPEcolors[gPEprops.color][2]
+    sprite(270).color = gPEcolors[gPEprops.color][2]
   end if
   
   script("propEditor").updateWorkLayerText()
   script("propEditor").renderPropsImage()
   call(#updatePropMenu, point(0,0))
+  member("propMenu").text = member("propBaseMenu").text
+  member("Drought Reserve text").text = ""
 end

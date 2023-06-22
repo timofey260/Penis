@@ -1,6 +1,14 @@
 global q, c, tm, mvL
 
 on exitFrame me
+  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+    _player.appMinimize()
+    
+  end if
+  if checkExit() then
+    _player.quit()
+  end if
+  
   
   repeat with q = 1  to 1040 then
     pnt = point(q , c)
@@ -15,11 +23,11 @@ on exitFrame me
         
         if d > 19 then
           exit repeat
-        else if member("layer"&string(d)).image.getPixel(pnt+point(-1,-1)) <> color(255, 255, 255) then
+        else if member("layer"&string(d)).image.getPixel(pnt+point(-1,-1)) <> color(255, 255, 255) and member("layer"&string(d)).image.getPixel(pnt+point(-1,-1)) <> color(0, 0, 0) then
           member("layer"&string(d)&"sh").image.setPixel(pnt+point(-1,-1), color(255, 0, 0))
           if d > 0 then
             repeat with dir in [point(-1, 0), point(0,-1), point(1,0), point(0,1)]then
-              if member("layer"&string(d)).image.getPixel(pnt+point(-1,-1)+dir) <> color(255, 255, 255) then
+              if member("layer"&string(d)).image.getPixel(pnt+point(-1,-1)+dir) <> color(255, 255, 255) and member("layer"&string(d)).image.getPixel(pnt+point(-1,-1)+dir) <> color(0, 0, 0) then
                 member("layer"&string(d)&"sh").image.setPixel(pnt+point(-1,-1)+dir, color(255, 0, 0))
               end if
             end repeat

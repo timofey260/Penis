@@ -1,8 +1,22 @@
 global projects, ldPrps, gTEprops, gTiles, gLEProps, gEEprops, gLightEProps
-global gLEVEL, gLOprops, gLoadedName, gCameraProps, gEnvEditorProps, gPEprops, gLOADPATH
+global gLEVEL, gLOprops, gLoadedName, gCameraProps, gEnvEditorProps, gPEprops, gLOADPATH, showControls
 
 
 on exitFrame me
+  if (showControls) then
+    sprite(32).blend = 100
+  else
+    sprite(32).blend = 0
+  end if
+  
+  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+    _player.appMinimize()
+    
+  end if
+  if checkExit() then
+    _player.quit()
+  end if
+  
   txt = "Use the up and down keys to select a project. Use enter to open it."
   put RETURN after txt
   repeat with f in gLOADPATH then
@@ -256,6 +270,7 @@ on versionFix me
             end if
           end if
           
+          -->changed fix to PJB's one
           found = 0
           if huntNew <> "" then
             gTEprops.tlMatrix[q][c][d].data = [point(2, 1), "NOT FOUND"]
@@ -272,10 +287,15 @@ on versionFix me
               end if
             end repeat
             if not found then
+              writeException("Tile Not Found", "the tile "&QUOTE& huntNew &QUOTE&" is missing in the Init.txt file from your Graphics folder.")
               put "Warning: unknown tile '" & huntNew & "' in map file. Replacing with default material."
               gTEprops.tlMatrix[q][c][d] = [#tp: "default", #data: 0]
             end if
           end if
+          --          if gTEprops.tlMatrix[q][c][d].data = [point(2, 1), "NOT FOUND"] then
+          --            writeException("Tile Not Found", "the tile "&QUOTE& huntNew &QUOTE&" is missing in the Init.txt file from your Graphics folder.")
+          --            gTEprops.tlMatrix[q][c][d].data = [point(3, 1), "Small Stone"]
+          --          end if
         end if
       end repeat 
     end repeat
@@ -320,6 +340,7 @@ on versionFix me
     end if
     
     if(correctReference = false)then
+      writeException("Prop Not Found", "the prop "&QUOTE& string(gPEprops.props[q][2]) &QUOTE&" is missing in the Init.txt file from your Props folder.")
       gPEprops.props[q][3] = point(1,1)
     end if
   end repeat
@@ -382,11 +403,127 @@ on versionFix me
       ef.options.add(["Seed", [], random(500)])
     end if
     
+    rotOp = 0
+    repeat with op in ef.options
+      if (op[1] = "Rotate") then
+        rotOp = 1
+        exit repeat
+      end if
+    end repeat
+    if (rotOp = 0) and (ef.nm = "Little Flowers") then
+      ef.options.add(["Rotate", ["On", "Off"], "Off"])
+    end if
+    
+    lay = 0
+    repeat with op2 in ef.options then
+      if op2[1] = "Layers" then
+        lay = 1
+        if op2[2] <> ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]then
+          op2[2] = ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"]
+        end if
+        exit repeat
+      end if
+    end repeat
+    if (lay = 0) and (["BlackGoo", "Super BlackGoo", "Stained Glass Properties"].getPos(ef.nm)=0)then
+      if (["Fungi Flowers", "Lighthouse Flowers", "Colored Fungi Flowers", "Colored Lighthouse Flowers", "Fern", "Giant Mushroom", "Sprawlbush", "featherFern", "Fungus Tree"].getPos(ef.nm)>0)then
+        ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "1"])
+      else
+        ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      end if
+    end if
+    
+    clr = 0
+    repeat with op3 in ef.options then
+      if op3[1] = "Color" then
+        clr = 1
+        if op3[2] <> ["Color1", "Color2", "Dead"] then
+          op3[2] = ["Color1", "Color2", "Dead"]
+        end if
+        exit repeat
+      end if
+    end repeat
+    if (clr = 0) and (["DaddyCorruption"].getPos(ef.nm)>0)then
+      ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
+    end if
+    
+    gaf = 0
+    repeat with grd in ef.options then
+      if grd[1] = "Affect Gradients and Decals" then
+        gaf = 1
+        exit repeat
+      end if
+    end repeat
+    if gaf = 0 and (["Melt", "Super Melt", "Destructive Melt", "Rust", "Barnacles"].getPos(ef.nm)>0) then
+      ef.options.add(["Affect Gradients and Decals", ["Yes", "No"], "No"])
+    end if
+    if gaf = 0 and (["Slime", "SlimeX3", "Fat Slime"].getPos(ef.nm)>0) then
+      ef.options.add(["Affect Gradients and Decals", ["Yes", "No"], "Yes"])
+    end if
+    
     if ef.findPos(#crossScreen) = void then
       ef.addProp(#crossScreen, 0)
       if(["Hang Roots","Growers","Wires","Chains"].getPos(ef.nm)>0)then
         ef.crossScreen = 1
       end if
+    end if
+    ----Effect update
+    if(["Arm Growers", "Growers", "Mini Growers", "Rollers", "Thorn Growers", "Garbage Spirals", "Spinets", "Small Springs", "Wires", "Chains", "Colored Wires", "Colored Chains", "Hang Roots", "Thick Roots", "Shadow Plants", "Colored Hang Roots", "Colored Thick Roots", "Colored Shadow Plants", "Root Plants"].getPos(ef.nm)>0)then
+      ef.crossScreen = 1
+    else
+      ef.crossScreen = 0
+    end if
+    if(["Slime", "Fat Slime", "Scales", "SlimeX3", "DecalsOnlySlime", "Melt", "Rust", "Barnacles", "Colored Barnacles", "Clovers", "Erode", "Sand", "Super Erode", "Ultra Super Erode", "Roughen", "Impacts", "Super Melt", "Destructive Melt"].getPos(ef.nm)>0)then
+      ef.tp = "standardErosion"
+    else
+      ef.tp = "nn"
+    end if
+    if(["Slime", "DecalsOnlySlime"].getPos(ef.nm)>0)then
+      ef.repeats = 130
+      ef.affectOpenAreas = 0.5
+    end if
+    if(["Fat Slime"].getPos(ef.nm)>0)then
+      ef.repeats = 200
+      ef.affectOpenAreas = 0.5
+    end if
+    if(["Scales"].getPos(ef.nm)>0)then
+      ef.repeats = 200
+      ef.affectOpenAreas = 0.05
+    end if
+    if(["SlimeX3"].getPos(ef.nm)>0)then
+      ef.repeats = 130*3
+      ef.affectOpenAreas = 0.5
+    end if
+    if(["Melt", "Super Erode", "Ultra Super Erode"].getPos(ef.nm)>0)then
+      ef.repeats = 60
+      ef.affectOpenAreas = 0.5
+    end if
+    if(["Rust"].getPos(ef.nm)>0)then
+      ef.repeats = 60
+      ef.affectOpenAreas = 0.2
+    end if
+    if(["Barnacles", "Colored Barnacles"].getPos(ef.nm)>0)then
+      ef.repeats = 60
+      ef.affectOpenAreas = 0.3
+    end if
+    if(["Clovers"].getPos(ef.nm)>0)then
+      ef.repeats = 20
+      ef.affectOpenAreas = 0.2
+    end if
+    if(["Erode", "Sand"].getPos(ef.nm)>0)then
+      ef.repeats = 80
+      ef.affectOpenAreas = 0.5
+    end if
+    if(["Roughen"].getPos(ef.nm)>0)then
+      ef.repeats = 30
+      ef.affectOpenAreas = 0.05
+    end if
+    if(["Impacts"].getPos(ef.nm)>0)then
+      ef.repeats = 75
+      ef.affectOpenAreas = 0.05
+    end if
+    if(["Super Melt", "Destructive Melt"].getPos(ef.nm)>0)then
+      ef.repeats = 50
+      ef.affectOpenAreas = 0.5
     end if
   end repeat
   

@@ -2,15 +2,16 @@ global gLOprops, gLeProps, gEnvEditButtons, gLastEnvEditButtons
 
 
 on exitFrame me
+  _movie.exitLock = TRUE
   cols = gLOprops.size.loch
   rows = gLOprops.size.locv
   
---  member("TEimg1").image = image(cols*5, rows*4, 16)
---  member("TEimg2").image = image(cols*5, rows*4, 16)
---  member("TEimg3").image = image(cols*5, rows*4, 16)
---  
---  member("levelEditImageShortCuts").image = image(cols*5, rows*5, 1)
-
+  --  member("TEimg1").image = image(cols*5, rows*4, 16)
+  --  member("TEimg2").image = image(cols*5, rows*4, 16)
+  --  member("TEimg3").image = image(cols*5, rows*4, 16)
+  --  
+  --  member("levelEditImageShortCuts").image = image(cols*5, rows*5, 1)
+  
   repeat with l = 1 to 3 then
     miniLvlEditDraw(l)
   end repeat

@@ -235,6 +235,14 @@ on degToVec(deg: number)
   return point(-cos(rad), sin(rad))
 end
 
+on degToVecFac2(deg, facH, facV)
+  deg = deg + 90
+  deg = -deg 
+  rad = ((deg/360.0).float)*PI*2
+  
+  return point(-cos(rad)*facH, sin(rad)*facV)
+end
+
 
 on closestPointOnLine(pnt, A, B)
   return giveCrossPoint(pnt, pnt + giveDirFor90degrToLine(A, B), A, B)

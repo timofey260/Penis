@@ -1,6 +1,14 @@
 global q, c, tm, dptsL, mvL, gLightEProps
 
 on exitFrame me
+  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+    _player.appMinimize()
+    
+  end if
+  if checkExit() then
+    _player.quit()
+  end if
+  
   
   q = 1
   c = 1

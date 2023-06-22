@@ -1,6 +1,18 @@
-global gLOprops, gEditLizard, gLevel, gLeProps, gPrioCam
+global gLOprops, gEditLizard, gLevel, gLeProps, gPrioCam, newSize, showControls
 
 on exitFrame me
+  _movie.exitLock = TRUE
+  
+  --  if showControls then
+  --    sprite(120).blend = 100
+  --    sprite(121).blend = 100
+  --  else
+  --    sprite(120).blend = 0
+  --    sprite(121).blend = 0
+  --  end if
+  
+  newSize[1] = gLOprops.size.loch
+  newSize[2] = gLOprops.size.locv
   cols = gLOprops.size.loch
   rows = gLOprops.size.locv
   -- member("levelEditImage1").image = image(cols*5, rows*5, 1)

@@ -11,7 +11,7 @@ on exitFrame me
   end if
   
   repeat with q = 0 to gDecalColors.count-1 then
-      member("finalImage").image.setPixel(q, 0, gDecalColors[q+1])
+    member("finalImage").image.setPixel(q, 0, gDecalColors[q+1])
   end repeat
   -- sprite(1).color = gSkyColor
   -- put member("levelName").text

@@ -1,6 +1,17 @@
 global c, tm, dptsL, gLightEProps, pos, gLevel, gLEProps, gLOprops, keepLooping, fogDptsL,gRenderCameraTilePos, gAnyDecals, solidMtrx
 
 on exitFrame me
+  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+    _player.appMinimize()
+    
+  end if
+  if checkExit() then
+    _player.quit()
+  end if
+  if checkExitRender() then
+    _movie.go(9)
+  end if
+  
   
   the randomSeed = gLOprops.tileSeed
   
@@ -86,7 +97,7 @@ on exitFrame me
   tm = _system.milliseconds
   
   repeat with q2 = 0 to 29 then
-    sprite(50-q2).loc =  point((1024/2)-q2, (768/2)-q2)
+    sprite(50-q2).loc =  point((1366/2)-q2, (768/2)-q2)
   end repeat
   
   

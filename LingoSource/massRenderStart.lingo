@@ -1,6 +1,15 @@
 global projects, ldPrps, gLOADPATH, massRenderSelectL
 
 on exitFrame me
+  _movie.exitLock = TRUE
+  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+    _player.appMinimize()
+    
+  end if
+  if checkExit() then
+    _player.quit()
+  end if
+  
   pth = the moviePath & the dirSeparator & "LevelEditorProjects"
   repeat with f in gLOADPATH then
     pth = pth & the dirSeparator & f

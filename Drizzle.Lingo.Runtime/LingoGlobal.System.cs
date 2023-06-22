@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Drizzle.Lingo.Runtime;
 
@@ -16,5 +16,7 @@ public sealed partial class LingoGlobal
         }
 
         public LingoNumber milliseconds => (int)_global.LingoRuntime.Stopwatch.ElapsedMilliseconds;
+
+        public LingoPoint desktoprectlist => new LingoPoint(1024f, 768f);
     }
 }

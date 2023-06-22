@@ -184,8 +184,8 @@ on exitFrame me
       dp = lr-5
       
       member("dumpImage").image.copyPixels(member("gradient" & L & string(lr)).image, rect(0,0,cols*20,rows*20)+rect(lightmargin,lightmargin,lightmargin,lightmargin), rect(0,0,cols*20,rows*20))
-   --   dumpImg = image((cols*20) + lightmargin*2, (rows*20) + lightmargin*2, 32)
-    --  dumpImg.copyPixels(member("gradient" & L & string(lr)).image, rect(0,0,cols*20,rows*20)+rect(lightmargin,lightmargin,lightmargin,lightmargin), rect(0,0,cols*20,rows*20))
+      --   dumpImg = image((cols*20) + lightmargin*2, (rows*20) + lightmargin*2, 32)
+      --  dumpImg.copyPixels(member("gradient" & L & string(lr)).image, rect(0,0,cols*20,rows*20)+rect(lightmargin,lightmargin,lightmargin,lightmargin), rect(0,0,cols*20,rows*20))
       --member("layer"&string(30-q)).image = dumpImg
       
       pstRct = rect(depthPnt(point(0,0)-extraPoint,dp),depthPnt(point(1400,800)+extraPoint,dp))
@@ -204,7 +204,7 @@ on exitFrame me
       lr = 29-bd
       dp = lr-5
       
-     -- dumpImg = image((cols*20) + lightmargin*2, (rows*20) + lightmargin*2, 32)
+      -- dumpImg = image((cols*20) + lightmargin*2, (rows*20) + lightmargin*2, 32)
       member("dumpImage").image.copyPixels(member("layer" & string(lr) & "dc").image, rect(0,0,cols*20,rows*20)+rect(lightmargin,lightmargin,lightmargin,lightmargin), rect(0,0,cols*20,rows*20))
       --member("layer"&string(30-q)).image = dumpImg
       

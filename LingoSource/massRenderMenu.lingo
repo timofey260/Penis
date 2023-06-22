@@ -1,7 +1,21 @@
 global projects, ldPrps, gTEprops, gTiles, gLEProps, gEEprops, gLightEProps
-global gLEVEL, gLOprops, gLoadedName, gLOADPATH, massRenderSelectL
+global gLEVEL, gLOprops, gLoadedName, gLOADPATH, massRenderSelectL, showControls
 
 on exitFrame me
+--  if showControls then
+--    sprite(32).blend = 100
+--  else
+--    sprite(32).blend = 0
+--  end if
+  
+  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+    _player.appMinimize()
+    
+  end if
+  if checkExit() then
+    _player.quit()
+  end if
+  
   pth = the moviePath & "LevelEditorProjects" & the dirSeparator
   repeat with f in gLOADPATH then
     pth = pth & f & the dirSeparator
@@ -109,7 +123,7 @@ on exitFrame me
     end repeat
   else if _key.keyPressed("C") and _movie.window.sizeState <> #minimized then
     massRenderSelectL = []
-  else  if (_key.keyPressed(48))or(_key.keyPressed("1")) and _movie.window.sizeState <> #minimized then
+  else  if (_key.keyPressed(48)) and _key.keypressed("Z") and _key.keypressed("R") or (_key.keyPressed("1")) and _movie.window.sizeState <> #minimized then
     _movie.go(9)
   end if
   

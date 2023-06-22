@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -21,7 +21,7 @@ public partial class LingoRuntime
     private readonly Dictionary<string, LingoCastLib>
         _castLibNames = new(StringComparer.InvariantCultureIgnoreCase);
 
-    private readonly LingoCastLib[] _castLibs = new LingoCastLib[5];
+    private readonly LingoCastLib[] _castLibs = new LingoCastLib[8];
 
     // This is intentionally case sensitive, see GetCastMemberAnyCast.
     private readonly Dictionary<string, CastMember> _castMemberNameIndex = new();
@@ -133,6 +133,9 @@ public partial class LingoRuntime
         InitLib("soundCast", 196608);
         InitLib("levelEditor", 262144);
         InitLib("exportBitmaps", 327680);
+        InitLib("Drought", 393216);
+        InitLib("Dry Editor", 458752);
+        InitLib("MSC", 524288);
 
         void InitLib(string name, int offset)
         {

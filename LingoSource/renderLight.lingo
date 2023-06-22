@@ -1,8 +1,15 @@
 global q, c, tm, pos, gLightEProps, gLevel, keepLooping, gViewRender, gLOprops
 
 on exitFrame me
+  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+    _player.appMinimize()
+    
+  end if
+  if checkExit() then
+    _player.quit()
+  end if
   if gViewRender then
-    if _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+    if checkExitRender() then
       _movie.go(9)
     end if
     me.newFrame()

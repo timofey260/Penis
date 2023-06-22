@@ -9,11 +9,25 @@ on giveMiddleOfTile(pos: point)
   type return: point
   --pos = pos - point(8, 8)
   return point((pos.locH*20)-10, (pos.locV*20)-10)-- - point(8,8)
-end 
+end
 
-on restrict(val: number, low: number, high: number)
-  type return: number
+on giveCorner1(pos)
+  return point((pos.locH*20), (pos.locV*20))
+end
 
+on giveCorner2(pos)
+  return point((pos.locH*20)-20, (pos.locV*20)-20)
+end
+
+on giveCorner3(pos)
+  return point((pos.locH*20), (pos.locV*20)-20)
+end
+
+on giveCorner4(pos)
+  return point((pos.locH*20)-20, (pos.locV*20))
+end
+
+on restrict(val, low, high)
   if val<low then
     return low
   else if val > high then
@@ -82,23 +96,23 @@ end
 on depthPnt(pnt: point, dpt: number)
   type return: point
   --return pnt + point(-dpt, -dpt)
-    dpt = dpt * -0.025
-    pnt = pnt - point(1400/2, 800/3)
-    dpt = (10 - dpt)*0.1
-    pnt = pnt / dpt
-    pnt = pnt + point(1400/2, 800/3)
-    return pnt
+  dpt = dpt * -0.025
+  pnt = pnt - point(1400/2, 800/3)
+  dpt = (10 - dpt)*0.1
+  pnt = pnt / dpt
+  pnt = pnt + point(1400/2, 800/3)
+  return pnt
 end
 
 on antiDepthPnt(pnt: point, dpt: number)
   type return: point
   --return pnt - point(dpt, dpt)
-    dpt = dpt * -0.025
-    pnt = pnt - point(1400/2, 800/3)
-    dpt = (10 - dpt)*0.1
-    pnt = pnt * dpt
-    pnt = pnt + point(1400/2, 800/3)
-    return pnt
+  dpt = dpt * -0.025
+  pnt = pnt - point(1400/2, 800/3)
+  dpt = (10 - dpt)*0.1
+  pnt = pnt * dpt
+  pnt = pnt + point(1400/2, 800/3)
+  return pnt
 end
 
 on seedForTile(tile: point, effectSeed: number)
@@ -146,6 +160,46 @@ on copyPixelsToEffectColor(gdLayer: string, lr: number, rct, getMember, gtRect: 
 end
 
 
+
+
+on copyPixelsToRootEffectColor(gdLayer, lr, rct, getMember, gtRect, zbleed, blnd)
+  --use: copyPixelsToRootEffectColor(effect color letter from "Color" option (A, B, C=none), depth layer (from 0 to 29), final rectangle, gradient image name, source rectangle, blend modifier(from 0 to 1))
+  --why: because copyPixelsToEffectColor is limited
+  if(blnd = void) then
+    blnd = 1.0
+  end if
+  
+  if (gdLayer <> "C")and(blnd > 0)then
+    lr = lr.integer
+    if lr < 0 then lr = 0
+    else if lr > 29 then lr = 29
+    
+    gtImg = member(getMember).image
+    if (blnd <> 0)and(blnd <> void) then
+      dmpImg = gtImg.duplicate()
+      dmpImg.copyPixels(member("pxl").image, dmpImg.rect, rect(0,0,1,1), {#blend:100.0*(1.0-blnd), #color:color(255, 255, 255)})
+      gtImg = dmpImg
+    end if
+    
+    member("gradient"&gdLayer&string(lr)).image.copyPixels(gtImg, rct, gtRect, {#ink:39})
+    
+    if(zbleed > 0) then
+      if (zbleed < 1)then
+        dmpImg = gtImg.duplicate()
+        dmpImg.copyPixels(member("pxl").image, dmpImg.rect, rect(0,0,1,1), {#blend:100.0*(1.0-zbleed), #color:color(255, 255, 255)})
+        gtImg = dmpImg
+      end if
+      repeat with nxtAdd = 1 to 3 then
+        nxt = lr + nxtAdd
+        if nxt > 29 then nxt = 29
+        member("gradient"&gdLayer&string(nxt)).image.copyPixels(gtImg, rct, gtRect, {#ink:39})
+        nxt = lr - nxtAdd
+        if nxt < 0 then nxt = 0
+        member("gradient"&gdLayer&string(nxt)).image.copyPixels(gtImg, rct, gtRect, {#ink:39})
+      end repeat
+    end if
+  end if
+end
 
 
 
@@ -474,7 +528,7 @@ on resizeLevel(sze: point, addTilesLeft: number, addTilesTop: number)
   
   gLEprops.matrix = newMatrix
   gTEprops.tlMatrix = newTEmatrix
-  gLOprops.size = sze + point(addTilesLeft, addTilesTop)
+  gLOprops.size = sze + point(addTilesLeft, addTilesTop) --- (rmvTilesLeft, rmvTilesTop)
   
   global gLASTDRAWWASFULLANDMINI
   gLASTDRAWWASFULLANDMINI = 0

@@ -1,9 +1,17 @@
 global gViewRender, c, gPEprops, keepLooping, gRenderCameraTilePos, gLastImported, gLastImportedImage, gProps, afterEffects, gAnyDecals, gRenderTrashProps, gCurrentlyRenderingTrash, gESoftProp
-global softProp, propsToRender
+global softProp, propsToRender, lG
 
 on exitFrame me
+  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+    _player.appMinimize()
+    
+  end if
+  if checkExit() then
+    _player.quit()
+  end if
+  
   if gViewRender then
-    if _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+    if checkExitRender() then
       _movie.go(9)
     end if
     me.newFrame()
@@ -120,8 +128,8 @@ on ShouldThisPropRender(prop, qd: list, settings)
 end
 
 on updateText me
-  txt: string = ""
-  put "<Rendering props>                                                            Press TAB to abort" after txt
+  txt = ""
+  put "<Rendering props>                                                Press TAB (VANILLA) / TAB + Z + R (DROUGHT) / TAB + X + C (DRY) to abort" after txt
   
   put RETURN after txt
   
@@ -177,7 +185,11 @@ on renderProp(prop, dp: number, qd: list, mdPoint: point, data: object)
   else
     propImage = gLastImportedImage
   end if
-
+  --INTERNAL
+  if (checkDRInternal(prop.nm)) then
+    propImage = member(prop.nm).image
+  end if
+  
   -- put prop.nm && prop.tp && qd
   case prop.tp of
     "standard", "variedStandard":
@@ -187,7 +199,7 @@ on renderProp(prop, dp: number, qd: list, mdPoint: point, data: object)
       renderDecal(prop, dp, qd, mdPoint, data, propImage)
     "rope":
       renderRope(prop, propsToRender[c][5], dp)
-    "soft", "variedSoft", "antimatter":
+    "soft", "variedSoft", "antimatter", "coloredSoft":
       gESoftProp = 0
       initRenderSoftProp(prop, qd, data, dp, propImage)
     "softEffect":
@@ -213,20 +225,40 @@ on renderVoxelProp(prop, dp: number, qd: list, mdPoint: point, propData, propIma
     var = propData.settings.variation
   end if
   ps = 1
+  --INTERNAL
+  if (checkDRInternal(prop.nm)) then
+    propImage = member(prop.nm).image
+  end if
   
   colored = (prop.tags.GetPos("colored") > 0)
   if(colored)then
     gAnyDecals = 1
   end if
   
-  repeat with q = 1 to prop.repeatL.count then
+  effectColorA = (prop.tags.getPos("effectColorA") > 0)
+  effectColorB = (prop.tags.getPos("effectColorB") > 0)
+  
+  repeat with q = 1 to prop.repeatL.count
     gtRect = rect(0,0,prop.sz.locH*20, prop.sz.locV*20) 
     gtRect = gtRect + rect(gtRect.width*(var-1),gtRect.height*(ps-1), gtRect.width*(var-1), gtRect.height*(ps-1))+rect(0,1,0,1)
-    repeat with q2 = 1 to prop.repeatL[q] then
-      
-      case(prop.colorTreatment) of
+    repeat with q2 = 1 to prop.repeatL[q]
+      case (prop.colorTreatment) of
         "standard":
-          member("layer"&string(dp)).image.copyPixels(propImage, qd, gtRect, {#ink:36})
+          member("layer" & string(dp)).image.copyPixels(propImage, qd, gtRect, {#ink:36})
+          if (effectColorA) then
+            if (prop.tp = "variedStandard") then
+              member("gradientA" & string(dp)).image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20 * prop.vars, 0, prop.sz.locH * 20 * prop.vars, 0), {#ink:39})
+            else
+              member("gradientA" & string(dp)).image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20, 0, prop.sz.locH * 20, 0), {#ink:39})
+            end if
+          end if
+          if (effectColorB) then
+            if (prop.tp = "variedStandard") then
+              member("gradientB" & string(dp)).image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20 * prop.vars, 0, prop.sz.locH * 20 * prop.vars, 0), {#ink:39})
+            else
+              member("gradientB" & string(dp)).image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20, 0, prop.sz.locH * 20, 0), {#ink:39})
+            end if
+          end if
         "bevel":
           dumpImg = image( gtRect.width,  gtRect.height, 1)
           dumpImg.copyPixels(propImage, dumpImg.rect, gtRect)
@@ -252,8 +284,12 @@ on renderVoxelProp(prop, dp: number, qd: list, mdPoint: point, propData, propIma
           member("layer"&string(dp)).image.copyPixels(dumpImg, dumpImg.rect, dumpImg.rect, {#ink:36})
       end case
       
-      if(colored)then
-        member("layer"&string(dp)&"dc").image.copyPixels(propImage, qd, gtRect+rect(prop.sz.locH*20,0,prop.sz.locH*20, 0), {#ink:36})
+      if (colored) and (effectColorA = false) and (effectColorB = false) then
+        if (prop.tp = "variedStandard") then
+          member("layer" & string(dp) & "dc").image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20 * prop.vars, 0, prop.sz.locH * 20 * prop.vars, 0), {#ink:36})
+        else
+          member("layer" & string(dp) & "dc").image.copyPixels(propImage, qd, gtRect + rect(prop.sz.locH * 20, 0, prop.sz.locH * 20, 0), {#ink:36})
+        end if
       end if
       
       dp = dp + 1
@@ -281,6 +317,10 @@ on renderDecal(prop, dp: number, qd: list, mdPoint: point, data, propImage: imag
   type clr: color
   rnd = 1
   ps = 1
+  --INTERNAL
+  if (checkDRInternal(prop.nm)) then
+    propImage = member(prop.nm).image
+  end if
   -- put "render decal"
   depthZero = dp
   repeat with testDp in [0, 10, 20] then
@@ -438,6 +478,30 @@ on renderRopeSegment(num: number, prop, data, dp: number, pos: point, dir: point
       pastQd = pastQd - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
       
       member("layer"&string(dp)).image.copyPixels(member("pxl").image, pastQd, rect(0,0,1,1), {#color:color(255, 0,0)})
+      
+    "Christmas Wire":
+      wdth = 8.5
+      pastQd = [pos + perp*wdth, pos - perp*wdth, lastPos - lastPerp*wdth, lastPos + lastPerp*wdth]
+      pastQd = pastQd - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
+      
+      member("layer"&string(dp)).image.copyPixels(member("christmasWireGraf"&lG).image, pastQd, rect(0,1,17,25), {#ink:36})
+      member("gradientA"&string(dp)).image.copyPixels(member("christmasWireGrad").image, pastQd, rect(0,1,17,25), {#ink:39})
+      member("gradientB"&string(dp)).image.copyPixels(member("christmasWireGrad").image, pastQd, rect(0,1,17,25), {#ink:39})
+      if lG = "1" then
+        lG = "2"
+      else
+        lG = "1"
+      end if
+      
+    "Ornate Wire":
+      wdth = 8.5
+      pastQd = [pos + perp*wdth, pos - perp*wdth, lastPos - lastPerp*wdth, lastPos + lastPerp*wdth]
+      pastQd = pastQd - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
+      
+      rcTc = rect(0,1,17,25)
+      member("layer"&string(dp)).image.copyPixels(member("tangledWireGraf").image, pastQd, rcTc, {#ink:36})
+      member("gradientA"&string(dp)).image.copyPixels(member("tangledWireGrad").image, pastQd, rcTc, {#ink:39})
+      member("gradientB"&string(dp)).image.copyPixels(member("tangledWireGrad").image, pastQd, rcTc, {#ink:39})
       
     "tube":
       wdth = 5.0
@@ -769,6 +833,63 @@ on renderRopeSegment(num: number, prop, data, dp: number, pos: point, dir: point
       if(num = data.points.count)then
         wireBunchSav = void
       end if
+      
+    "Big Big Pipe":
+      wdth = 20
+      pastQd = [pos - perp*wdth, pos + perp*wdth, lastPos + lastPerp*wdth, lastPos - lastPerp*wdth]
+      pastQd = pastQd - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
+      
+      repeat with a = 0 to 4 then
+        if(dp + a + 1 <= 29)then
+          member("layer"&string(dp + a + 1)).image.copyPixels(member("bigBigPipeGraf").image, pastQd, rect(40,a*40,80,(a+1)*40), {#ink:36})
+        else 
+          exit repeat
+        end if
+      end repeat
+      
+      pastQd = [pos - perp*wdth - dir*5, pos + perp*wdth - dir*5, pos + perp*wdth + dir*5, pos - perp*wdth + dir*5]
+      pastQd = pastQd - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
+      
+      repeat with a = 0 to 5 then
+        if(dp + a <= 29)then
+          member("layer"&string(dp + a)).image.copyPixels(member("bigBigPipeGraf").image, pastQd, rect(0,a*10,40,(a+1)*10), {#ink:36})
+        else 
+          exit repeat
+        end if
+      end repeat
+      
+      mdPnt = (pos + lastPos)/2
+      mdPnt = mdPnt - gRenderCameraTilePos*20
+      member("layer"&string(dp)).image.copyPixels(member("bigBigPipeGraf").image, rect(mdPnt,mdPnt)+rect(-5,-5,5,5), rect(80,0,90,10), {#ink:36})
+      
+    "Ring Chain":
+      wdth = 20
+      pastQd = [pos - perp*wdth, pos + perp*wdth, lastPos + lastPerp*wdth, lastPos - lastPerp*wdth]
+      pastQd = pastQd - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
+      
+      repeat with a = 0 to 4 then
+        if(dp + a <= 29)then
+          member("layer"&string(dp + a)).image.copyPixels(member("ringChainGraf").image, pastQd, rect(40,a*40,80,(a+1)*40), {#ink:36})
+        else 
+          exit repeat
+        end if
+      end repeat
+      
+      pastQd = [pos - perp*wdth - dir*5, pos + perp*wdth - dir*5, pos + perp*wdth + dir*5, pos - perp*wdth + dir*5]
+      pastQd = pastQd - [gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20, gRenderCameraTilePos*20]
+      
+      repeat with a = 0 to 4 then
+        if(dp + a <= 29)then
+          member("layer"&string(dp + a)).image.copyPixels(member("ringChainGraf").image, pastQd, rect(0-19,a*10,40-19,(a+1)*10), {#ink:36})
+        else 
+          exit repeat
+        end if
+      end repeat
+      
+      mdPnt = (pos + lastPos)/2
+      mdPnt = mdPnt - gRenderCameraTilePos*20
+      member("layer"&string(dp)).image.copyPixels(member("ringChainGraf").image, rect(mdPnt,mdPnt)+rect(-5,-5,5,5), rect(80,0,90,10), {#ink:36})
+      
   end case
 end
 
@@ -858,9 +979,13 @@ on initRenderSoftProp(prop, qd: list, propData, dp, propImage: image)
     getRect = rect((propData.settings.variation-1)*prop.pxlSize.locH, 0, propData.settings.variation*prop.pxlSize.locH, prop.pxlSize.locV) + rect(0,1,0,1)
   end if
   
+  if(prop.tp = "coloredSoft")then
+    getRect = rect(prop.pxlSize.locH, 0, prop.pxlSize.locH, prop.pxlSize.locV) + rect(0,1,0,1)
+  end if
+  
   member("softPropRender").image.copyPixels(propImage, qd-[offsetPnt, offsetPnt, offsetPnt, offsetPnt], getRect)
   
-  if(prop.tp = "variedSoft")then
+  if(prop.tp = "variedSoft") or (prop.tp = "coloredSoft")then
     if(prop.colorize = 1)then
       if(propData.settings.applyColor)then
         gAnyDecals = true
@@ -868,6 +993,11 @@ on initRenderSoftProp(prop, qd: list, propData, dp, propImage: image)
         member("softPropColor").image.copyPixels(propImage, qd-[offsetPnt, offsetPnt, offsetPnt, offsetPnt], getRect+rect(0, getRect.height, 0, getRect.height))
       end if
     end if
+  end if
+  
+  if(prop.tags.GetPos("effectColorA") > 0 or prop.tags.GetPos("effectColorB") > 0)then
+    member("softPropGrad").image = image(pasteRect.width, pasteRect.height, 32)
+    member("softPropGrad").image.copyPixels(member("previewImprt").image, qd-[offsetPnt, offsetPnt, offsetPnt, offsetPnt], getRect+rect(0, getRect.height, 0, getRect.height))
   end if
   
   clr = 0
@@ -901,6 +1031,9 @@ on renderSoftProp()
   type dpthremove: number
   type clrzclr: color
   type val: number
+  effectColorA = (softProp.prop.tags.GetPos("effectColorA") > 0)
+  effectColorB = (softProp.prop.tags.GetPos("effectColorB") > 0)
+  
   repeat with q2 = 0 to softProp.pasteRect.width-1 then
     clr = member("softPropRender").image.getPixel(q2, softProp.c)
     if(clr <> color(255, 255, 255)) and ((clr.green > 0) or (softProp.prop.tp = "antimatter")) then
@@ -929,13 +1062,33 @@ on renderSoftProp()
         end repeat
         
       else
-        palCol = color(0,255,0)
+        if (effectColorA) then
+          palCol = color(255,0,255)
+        else if (effectColorB) then
+          palCol = color(0,255,255)
+        else
+          palCol = color(0,255,0)
+        end if
         
         if (softProp.prop.selfShade = 0)then
-          if(clr.blue > (255.0/3.0)*2.0) then
-            palCol = color(0,0,255)
-          else if(clr.blue < 255.0/3.0) then
-            palCol = color(255, 0,0)
+          if (effectColorA) then
+            if(clr.blue > (255.0/3.0)*2.0) then
+              palCol = color(255,150,255)
+            else if(clr.blue < 255.0/3.0) then
+              palCol = color(150,0,150)
+            end if
+          else if (effectColorB) then
+            if(clr.blue > (255.0/3.0)*2.0) then
+              palCol = color(150,255,255)
+            else if(clr.blue < 255.0/3.0) then
+              palCol = color(0,150,150)
+            end if
+          else
+            if(clr.blue > (255.0/3.0)*2.0) then
+              palCol = color(0,0,255)
+            else if(clr.blue < 255.0/3.0) then
+              palCol = color(255,0,0)
+            end if
           end if
         else
           
@@ -951,9 +1104,21 @@ on renderSoftProp()
           ang = ang * (1.0-clr.red/255.0)
           
           if(ang*10.0*power(dpth, softProp.prop.depthAffectHilites) > softProp.prop.highLightBorder)then
-            palCol = color(0,0,255)
+            if (effectColorA) then
+              palCol = color(255,150,255)
+            else if (effectColorB) then
+              palCol = color(150,255,255)
+            else
+              palCol = color(0,0,255)
+            end if
           else if(-ang*10.0 > softProp.prop.shadowBorder) then
-            palCol = color(255, 0,0)
+            if (effectColorA) then
+              palCol = color(150,0,150)
+            else if (effectColorB) then
+              palCol = color(0,150,150)
+            else
+              palCol = color(255,0,0)
+            end if
           end if
         end if
         
@@ -991,11 +1156,34 @@ on renderSoftProp()
               clrzClr = member("softPropColor").image.getPixel(q2, softProp.c)
             end if
           end if
+        else if(softProp.prop.tp = "coloredSoft")then
+          if(softProp.prop.colorize = 1)then
+            if(softProp.propData.settings.applyColor)then
+              clrzClr = member("softPropColor").image.getPixel(q2, softProp.c)
+            end if
+          end if
         end if
         
         if(clrzClr <> color(255, 255, 255))then
           repeat with dp = restrict(renderFrom.integer, 0, 29) to restrict(renderTo.integer, 0, 29)then
             member("layer"&dp&"dc").image.setPixel(q2+softProp.pasteRect.left, softProp.c+softProp.pasteRect.top, clrzClr)
+          end repeat
+        end if
+        
+        
+        gradOp = color(255, 255, 255)
+        
+        if(effectColorA or effectColorB)then
+          gradOp = member("softPropGrad").image.getPixel(q2, softProp.c)
+        end if
+        
+        if(effectColorA and gradOp <> color(255, 255, 255))then
+          repeat with dp = restrict(renderFrom.integer, 0, 29) to restrict(renderTo.integer, 0, 29)then
+            member("gradientA"&dp).image.setPixel(q2+softProp.pasteRect.left, softProp.c+softProp.pasteRect.top, gradOp)
+          end repeat
+        else if(effectColorB and gradOp <> color(255, 255, 255))then
+          repeat with dp = restrict(renderFrom.integer, 0, 29) to restrict(renderTo.integer, 0, 29)then
+            member("gradientB"&dp).image.setPixel(q2+softProp.pasteRect.left, softProp.c+softProp.pasteRect.top, gradOp)
           end repeat
         end if
         
@@ -1025,16 +1213,7 @@ on softPropDepth(pxl: point)
 end
 
 on renderESoftProp()
-  type clr: color
-  type dpth: number
-  type palcol: color
-  type ang: number
-  type pnt: point
-  type dpthRemove: number  
-  type renderfrom: number
-  type renderto: number
-  type clrzClr: color
-  type val: number
+  
   repeat with q2 = 0 to softProp.pasteRect.width-1 then
     clr = member("softPropRender").image.getPixel(q2, softProp.c)
     if(clr <> color(255, 255, 255)) then
@@ -1098,14 +1277,20 @@ on renderESoftProp()
             clrzClr = member("softPropColor").image.getPixel(q2, softProp.c)
           end if
         end if
+      else  if(softProp.prop.tp = "coloredSoft")then
+        if(softProp.prop.colorize = 1)then
+          if(softProp.propData.settings.applyColor)then
+            clrzClr = member("softPropColor").image.getPixel(q2, softProp.c)
+          end if
+        end if
       end if
       
       if(clrzClr <> color(255, 255, 255))then
-      if (clr.blue > 0)then
-        clrzClr.green = 1
-      else if (clr.red > 0)then
-        clrzClr.green = 2
-      end if
+        if (clr.blue > 0)then
+          clrzClr.green = 1
+        else if (clr.red > 0)then
+          clrzClr.green = 2
+        end if
         repeat with dp = restrict(renderFrom.integer, 0, 29) to restrict(renderTo.integer, 0, 29)then
           member("layer"&dp&"dc").image.setPixel(q2+softProp.pasteRect.left, softProp.c+softProp.pasteRect.top, clrzClr)
         end repeat
@@ -1124,9 +1309,7 @@ on renderESoftProp()
   end if
 end
 
-on EsoftPropDepth(pxl: point)
-  type return: number
-  type clr: color
+on EsoftPropDepth(pxl)
   clr = member("softPropRender").image.getPixel(pxl.locH, pxl.locV)
   if(clr = color(255, 255, 255)) or (clr = 0) then
     return 0.0
@@ -1143,32 +1326,9 @@ end
 
 
 
-on renderLongProp(qd: list, prop, data, dp: number)
-  --apparently data is unused here
-  type perp: point
-  type totalsegments: number
-  type buffer: number
-  type qd2: list
-  type d: number
-  type pnt: point
-  type steps: number
-  type ornt: number
-  type degDir: number
-  type stp: number
-  type pos: point
-  type rct: rect
-  type gtRect: rect
-  type thirdDist: number
-  type ps: point
-  type dr: point
-  type rodWidth: number
-  type perpOffset: number
-  type sz: number
-  type wdth: number
-  type a2: point
-  
-  A: point = (qd[1]+qd[4])/2.0
-  B: point = (qd[2]+qd[3])/2.0
+on renderLongProp(qd, prop, data, dp)
+  A = (qd[1]+qd[4])/2.0
+  B = (qd[2]+qd[3])/2.0
   
   dir: point = MoveToPoint(A, B, 1.0)
   perp = CorrectPerp(dir)
@@ -1201,6 +1361,49 @@ on renderLongProp(qd: list, prop, data, dp: number)
       mem = member("clampBoltGraf")
       member("layer" & dp).image.copyPixels(mem.image, rect(A,A) + rect(-mem.image.width/2, -mem.image.height/2, mem.image.width/2, mem.image.height/2), mem.image.rect, {#ink:36})
       member("layer" & dp).image.copyPixels(mem.image, rect(B,B) + rect(-mem.image.width/2, -mem.image.height/2, mem.image.width/2, mem.image.height/2), mem.image.rect, {#ink:36})
+      
+    "Stretched Pipe":
+      
+      steps = ((diag(A, B)/20.0)+0.4999).integer
+      degDir = lookatpoint(A, B)
+      stp = random(100)*0.01
+      repeat with q = 1 to steps then
+        pos = A+(dir*20.0*(q-stp))
+        rct = rect(pos,pos)+rect(-10,-11,10,11)
+        
+        repeat with e = 0 to 0 then
+          member("layer"&string(restrict(dp+e, 0, 29))).image.copypixels(member("stretchedPipeGraf").image, rotateToQuad(rct, degDir), rect(0, 0, 20, 22), {#ink:36})
+        end repeat
+      end repeat
+      
+    "Stretched Wire":
+      
+      steps = ((diag(A, B)/2.0)+0.4999).integer
+      degDir = lookatpoint(A, B)
+      stp = random(100)*0.01
+      repeat with q = 1 to steps then
+        pos = A+(dir*2.0*(q-stp))
+        rct = rect(pos,pos)+rect(-1,-2,1,2)
+        
+        repeat with e = 0 to 0 then
+          member("layer"&string(restrict(dp+e, 0, 29))).image.copypixels(member("stretchedWireGraf").image, rotateToQuad(rct, degDir), rect(0, e*2, 2, (e+1)*2 + 2), {#ink:36})
+        end repeat
+      end repeat
+      
+    "Twisted Thread":
+      
+      steps = ((diag(A, B)/8.0)+0.4999).integer
+      degDir = lookatpoint(A, B)
+      stp = random(100)*0.01
+      repeat with q = 1 to steps then
+        pos = A+(dir*8.0*(q-stp))
+        rct = rect(pos,pos)+rect(-4,-4,4,4)
+        
+        repeat with e = 0 to 0 then
+          member("layer"&string(restrict(dp+e, 0, 29))).image.copypixels(member("twistedThreadGraf").image, rotateToQuad(rct, degDir), rect(0, e*8, 8, (e+1)*8), {#ink:36})
+        end repeat
+      end repeat
+      
     "Thick Chain":
       
       steps = ((diag(A, B)/12.0)+0.4999).integer
@@ -1361,6 +1564,125 @@ on DoPropTags(prop, dp, qd)
         member("layer" & string(dp)).image.copyPixels(member("circularSigns").image, rect(-60,-60,60,60)+rect(mdPnt,mdPnt), rect((rnd-1)*120, 1, rnd*120, 1 + 120), {#ink:36, #color:color(255,0,255)})
         
         copyPixelsToEffectColor("A", dp, rect(mdPnt+point(-60,-60),mdPnt+point(60,60)), "circleSignGrad", rect(0, 1, 120, 121), 0.5, 1)
+        
+      "Circular Sign B":
+        -- put "CIRCLE SIGN"
+        
+        img = image(120,120,1)
+        rnd = random(14)
+        img.copyPixels(member("circularSigns").image, rect(0,0,120, 120), rect((rnd-1)*120, 1 + 240, rnd*120, 1 + 240 + 120), {#ink:36, #color:color(0,0,0)})
+        
+        
+        mdPnt = (qd[1] + qd[2] + qd[3] + qd[4])/4.0
+        
+        repeat with r in [[point(-1,-1), color(0,0,255)], [point(-0,-1), color(0,0,255)], [point(-1,-0), color(0,0,255)], [point(-2,-2), color(0,0,255)], [point(1,1), color(255,0,0)],[point(0,1), color(255,0,0)],[point(1,0), color(255,0,0)],[point(2,2), color(255,0,0)],[point(0,0), color(0,255,0)]] then
+          
+          member("layer" & string(restrict(dp, 0, 29))).image.copyPixels(img, rect(-60,-60,60,60)+rect(mdPnt,mdPnt)+rect(r[1],r[1]), rect(0,0,120,120), {#ink:36, #color:r[2]})
+          
+        end repeat
+        
+        member("layer" & string(dp)).image.copyPixels(member("circularSigns").image, rect(-60,-60,60,60)+rect(mdPnt,mdPnt), rect((rnd-1)*120, 1+120, rnd*120, 1 + 240), {#ink:36, #color:color(0,255,0)})
+        member("layer" & string(dp)).image.copyPixels(member("circularSigns").image, rect(-60,-60,60,60)+rect(mdPnt,mdPnt), rect((rnd-1)*120, 1, rnd*120, 1 + 120), {#ink:36, #color:color(0,255,255)})
+        
+        copyPixelsToEffectColor("B", dp, rect(mdPnt+point(-60,-60),mdPnt+point(60,60)), "circleSignGrad", rect(0, 1, 120, 121), 0.5, 1)   
+        
+        
+      "Circular Sign Off":
+        img = image(120,120,1)
+        rnd = random(14)
+        img.copyPixels(member("circularSigns").image, rect(0,0,120, 120), rect((rnd-1)*120, 1 + 240, rnd*120, 1 + 240 + 120), {#ink:36, #color:color(0,0,0)})
+        
+        mdPnt = (qd[1] + qd[2] + qd[3] + qd[4])/4.0
+        
+        repeat with r in [[point(-1,-1), color(0,0,255)], [point(-0,-1), color(0,0,255)], [point(-1,-0), color(0,0,255)], [point(-2,-2), color(0,0,255)], [point(1,1), color(255,0,0)],[point(0,1), color(255,0,0)],[point(1,0), color(255,0,0)],[point(2,2), color(255,0,0)],[point(0,0), color(0,255,0)]] then
+          
+          member("layer" & string(restrict(dp, 0, 29))).image.copyPixels(img, rect(-60,-60,60,60)+rect(mdPnt,mdPnt)+rect(r[1],r[1]), rect(0,0,120,120), {#ink:36, #color:r[2]})
+          
+        end repeat
+        
+        member("layer" & string(dp)).image.copyPixels(member("circularSigns").image, rect(-60,-60,60,60)+rect(mdPnt,mdPnt), rect((rnd-1)*120, 1+120, rnd*120, 1 + 240), {#ink:36, #color:color(0,255,0)})
+        member("layer" & string(dp)).image.copyPixels(member("circularSigns").image, rect(-60,-60,60,60)+rect(mdPnt,mdPnt), rect((rnd-1)*120, 1, rnd*120, 1 + 120), {#ink:36, #color:color(255,0,0)})
+        
+        
+      "Larger Sign":
+        -- put "BIG SIGN"
+        img = image(80+6,100+6,1)
+        rnd = random(14)
+        rct = rect(3,3,83,103)
+        img.copyPixels(member("largerSigns").image, rct, rect((rnd-1)*80, 0, rnd*80, 100), {#ink:36, #color:color(0,0, 0)})
+        
+        mdPnt = (qd[1] + qd[2] + qd[3] + qd[4])/4.0
+        
+        repeat with r in [[point(-4,-4), color(0,0,255)],[point(-3,-3), color(0,0,255)],[point(3,3), color(255,0,0)],[point(4,4), color(255,0,0)], [point(-2,-2), color(0,255,0)], [point(-1,-1), color(0,255,0)], [point(0,0), color(0,255,0)], [point(1,1), color(0,255,0)], [point(2,2), color(0,255,0)], [point(2,2), color(0,255,0)]] then
+          repeat with d = 0 to 1 then
+            member("layer" & string(restrict(dp + d, 0, 29))).image.copyPixels(img, rect(-43,-53,43,53)+rect(mdPnt,mdPnt)+rect(r[1],r[1]), rect(0,0,86,106), {#ink:36, #color:r[2]})
+          end repeat
+        end repeat
+        
+        
+        member("layer" & string(dp)).image.copyPixels(img, rect(-43,-53,43,53)+rect(mdPnt,mdPnt), rect(0,0,86,106), {#ink:36, #color:color(255,255,255)})
+        member("layer" & string(restrict(dp + 1, 0, 29))).image.copyPixels(img, rect(-43,-53,43,53)+rect(mdPnt,mdPnt), rect(0,0,86,106), {#ink:36, #color:color(255,0,255)})
+        
+        member("largeSignGrad2").image.copyPixels(member("largeSignGrad").image, rect(0,0,80,100), rect(0,0,80,100))
+        
+        repeat with a = 0 to 6 then
+          repeat with b = 0 to 13 then
+            rct = rect((a*16)-6, (b*8)-1, ((a+1)*16)-6, ((b+1)*8)-1) --+ rect(0,0,-1,-1)
+            if(random(7)=1)then
+              blnd = random(random(100))
+              member("largeSignGrad2").image.copyPixels(member("pxl").image, rct+rect(0,0,1,1), rect(0,0,1,1), {#color:color(255, 255, 255), #blend:blnd/2})
+              member("largeSignGrad2").image.copyPixels(member("pxl").image, rct+rect(1,1,0,0), rect(0,0,1,1), {#color:color(255, 255, 255), #blend:blnd/2})
+            else if(random(7)=1)then
+              member("largeSignGrad2").image.copyPixels(member("pxl").image, rct+rect(1,1,0,0), rect(0,0,1,1), {#color:color(0, 0, 0), #blend:random(random(60))})
+            end if
+            member("largeSignGrad2").image.copyPixels(member("pxl").image, rect(rct.left, rct.top, rct.right, rct.top+1), rect(0,0,1,1), {#color:color(255, 255, 255), #blend:20})
+            member("largeSignGrad2").image.copyPixels(member("pxl").image, rect(rct.left, rct.top+1, rct.left+1, rct.bottom), rect(0,0,1,1), {#color:color(255, 255, 255), #blend:20})
+            
+            
+          end repeat
+        end repeat
+        
+        copyPixelsToEffectColor("A", restrict(dp + 1, 0, 29), rect(mdPnt+point(-43,-53),mdPnt+point(43,53)), "largeSignGrad2", rect(0, 0, 86, 106), 1, 1.0)
+        
+      "Larger Sign B":
+        -- put "BIG SIGN"
+        img = image(80+6,100+6,1)
+        rnd = random(14)
+        rct = rect(3,3,83,103)
+        img.copyPixels(member("largerSigns").image, rct, rect((rnd-1)*80, 0, rnd*80, 100), {#ink:36, #color:color(0,0, 0)})
+        
+        mdPnt = (qd[1] + qd[2] + qd[3] + qd[4])/4.0
+        
+        repeat with r in [[point(-4,-4), color(0,0,255)],[point(-3,-3), color(0,0,255)],[point(3,3), color(255,0,0)],[point(4,4), color(255,0,0)], [point(-2,-2), color(0,255,0)], [point(-1,-1), color(0,255,0)], [point(0,0), color(0,255,0)], [point(1,1), color(0,255,0)], [point(2,2), color(0,255,0)], [point(2,2), color(0,255,0)]] then
+          repeat with d = 0 to 1 then
+            member("layer" & string(restrict(dp + d, 0, 29))).image.copyPixels(img, rect(-43,-53,43,53)+rect(mdPnt,mdPnt)+rect(r[1],r[1]), rect(0,0,86,106), {#ink:36, #color:r[2]})
+          end repeat
+        end repeat
+        
+        
+        member("layer" & string(dp)).image.copyPixels(img, rect(-43,-53,43,53)+rect(mdPnt,mdPnt), rect(0,0,86,106), {#ink:36, #color:color(255,255,255)})
+        member("layer" & string(restrict(dp + 1, 0, 29))).image.copyPixels(img, rect(-43,-53,43,53)+rect(mdPnt,mdPnt), rect(0,0,86,106), {#ink:36, #color:color(0,255,255)})
+        
+        member("largeSignGrad2").image.copyPixels(member("largeSignGrad").image, rect(0,0,80,100), rect(0,0,80,100))
+        
+        repeat with a = 0 to 6 then
+          repeat with b = 0 to 13 then
+            rct = rect((a*16)-6, (b*8)-1, ((a+1)*16)-6, ((b+1)*8)-1) --+ rect(0,0,-1,-1)
+            if(random(7)=1)then
+              blnd = random(random(100))
+              member("largeSignGrad2").image.copyPixels(member("pxl").image, rct+rect(0,0,1,1), rect(0,0,1,1), {#color:color(255, 255, 255), #blend:blnd/2})
+              member("largeSignGrad2").image.copyPixels(member("pxl").image, rct+rect(1,1,0,0), rect(0,0,1,1), {#color:color(255, 255, 255), #blend:blnd/2})
+            else if(random(7)=1)then
+              member("largeSignGrad2").image.copyPixels(member("pxl").image, rct+rect(1,1,0,0), rect(0,0,1,1), {#color:color(0, 0, 0), #blend:random(random(60))})
+            end if
+            member("largeSignGrad2").image.copyPixels(member("pxl").image, rect(rct.left, rct.top, rct.right, rct.top+1), rect(0,0,1,1), {#color:color(255, 255, 255), #blend:20})
+            member("largeSignGrad2").image.copyPixels(member("pxl").image, rect(rct.left, rct.top+1, rct.left+1, rct.bottom), rect(0,0,1,1), {#color:color(255, 255, 255), #blend:20})
+            
+            
+          end repeat
+        end repeat
+        
+        copyPixelsToEffectColor("B", restrict(dp + 1, 0, 29), rect(mdPnt+point(-43,-53),mdPnt+point(43,53)), "largeSignGrad2", rect(0, 0, 86, 106), 1, 1.0)
     end case
   type img: image
   type rnd: number

@@ -1,6 +1,7 @@
 global gTEprops, gTiles, gEEprops, gLightEProps, firstFrame, geverysecond, glgtimgQuad, gDirectionKeys,gLOprops
 
 on exitFrame me
+  _movie.exitLock = TRUE
   firstFrame = 1
   l = [ #m1:1, m2:0, #w:0, #a:0, #s:0, #d:0, #r:0, f:0]
   gLightEProps.lastKeys = l.duplicate()
@@ -18,17 +19,17 @@ on exitFrame me
   
   gLightEProps.lastTm = _system.milliseconds
   
-  sprite(11).member = member("pxl")
-  sprite(12).member = member("pxl")
+  sprite(181).member = member("pxl")
+  sprite(182).member = member("pxl")
   gLightEProps.paintShape = "pxl"
   
-  sprite(5).rect = rect(0,0,gLOprops.size.loch*20,gLOprops.size.locv*20)
+  sprite(175).rect = rect(0,0,gLOprops.size.loch*20,gLOprops.size.locv*20)
   
-  sprite(8).rect = rect(0,0,gLOprops.size.loch*20,gLOprops.size.locv*20)
+  sprite(178).rect = rect(0,0,gLOprops.size.loch*20,gLOprops.size.locv*20)
   
-  sprite(9).member = member("lightImage")
-  sprite(10).member = member("lightImage")
-  sprite(6).member = member("lightImage")
+  sprite(179).member = member("lightImage")
+  sprite(180).member = member("lightImage")
+  sprite(176).member = member("lightImage")
 end
 
 

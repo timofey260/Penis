@@ -1,7 +1,12 @@
-global gTEprops, gLEProps, gTiles, gEEProps, gEffects, lstSpace, gLOprops, gEnvEditorProps, gDirectionKeys
+global gTEprops, gLEProps, gTiles, gEEProps, gEffects, lstSpace, gLOprops, gEnvEditorProps, gDirectionKeys, gPEProps, gProps, showControls
 
 
 on exitFrame me
+  if (showControls) then
+    sprite(241).blend = 100
+  else
+    sprite(241).blend = 0
+  end if
   
   repeat with q = 1 to 4 then
     
@@ -27,7 +32,7 @@ on exitFrame me
         TEdraw(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), l)
       end repeat
       drawShortCutsImg(rect(1,1,gLOprops.size.loch,gLOprops.size.locv), 16)
-      
+      script("propEditor").renderPropsImage()
       me.drawEfMtrx(gEEprops.editEffect)
       
     end if
@@ -35,10 +40,10 @@ on exitFrame me
   end repeat
   
   if gEnvEditorProps.waterLevel = -1 then
-    sprite(11).rect = rect(0,0,0,0)
+    sprite(220).rect = rect(0,0,0,0)
   else
-    rct: rect = rect(0, gLOprops.size.locv-gEnvEditorProps.waterLevel-gLOProps.extraTiles[4], gLOprops.size.loch, gLOprops.size.locv) - rect(gLEProps.camPos, gLEProps.camPos)
-    sprite(11).rect = ((rct.intersect(rect(0,0,52,40))+rect(1, 1, 1, 1))*rect(16,16,16,16))+rect(0, -8, 0, 0)
+    rct = rect(0, gLOprops.size.locv-gEnvEditorProps.waterLevel-gLOProps.extraTiles[4], gLOprops.size.loch, gLOprops.size.locv) - rect(gLEProps.camPos, gLEProps.camPos)
+    sprite(220).rect = ((rct.intersect(rect(0,0,52,40))+rect(1, 1, 1, 1))*rect(16,16,16,16))+rect(0, -8, 0, 0)
   end if
   
   msTile: point = (_mouse.mouseLoc/point(16.0, 16.0))-point(0.4999, 0.4999)
@@ -73,8 +78,10 @@ on exitFrame me
   if me.checkKey("N") then
     me.initMode("createNew")
   end if
-  if me.checkKey("E") then
-    me.initMode("chooseEffect")
+  if gEEprops.editEffect <> void then
+    if me.checkKey("E") then
+      me.initMode("chooseEffect")
+    end if
   end if
   
   case gEEprops.mode of 
@@ -99,7 +106,7 @@ on exitFrame me
         me.initMode("editEffect")
       end if
       
-      sprite(21).rect = rect(-100, -100, -100, -100)
+      sprite(244).rect = rect(-100, -100, -100, -100)
     "chooseEffect":
       if me.checkKey("W") then
         me.updateEffectsL(-1)
@@ -107,14 +114,22 @@ on exitFrame me
       if me.checkKey("S") then
         me.updateEffectsL(1)
       end if
-      if (_key.keyPressed(" ") and _movie.window.sizeState <> #minimized)and(lstSpace=0)then
-        gEEprops.editEffect = gEEprops.selectEditEffect
-        me.initMode("editEffect")
-        me.updateEffectsL(0)
+      if gEEprops.editEffect <> void then
+        if (_key.keyPressed(" ") and _movie.window.sizeState <> #minimized)and(lstSpace=0)then
+          gEEprops.editEffect = gEEprops.selectEditEffect
+          me.initMode("editEffect")
+          me.updateEffectsL(0)
+        end if
       end if
+      --      if gEEprops.editEffect = void then
+      --        me.initMode("createNew")
+      --      end if
       
-      sprite(21).rect = rect(-100, -100, -100, -100)
+      sprite(244).rect = rect(-100, -100, -100, -100)
     "editEffect":
+      --      if gEEprops.effects[gEEprops.editEffect] = void then
+      --        me.initMode("editEffect")
+      --      end if
       if me.checkKey("r") then
         gEEprops.brushSize = restrict(gEEprops.brushSize + 1, 1, 10)
       end if
@@ -135,11 +150,15 @@ on exitFrame me
         me.updateEditEffect(point(1, 0))
       end if
       
-      if gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][1] = "seed" then
-        me.changeOption()
-      else
-        if (_key.keyPressed(" ") and _movie.window.sizeState <> #minimized)and(lstSpace=0)then
+      if gEEprops.effects[gEEprops.editEffect] <> void then
+        if gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][1] = "seed" then
           me.changeOption()
+        else if gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][1] = "Leaf Density" then
+          me.changeOption()
+        else
+          if (_key.keyPressed(" ") and _movie.window.sizeState <> #minimized)and(lstSpace=0)then
+            me.changeOption()
+          end if
         end if
       end if
       
@@ -148,12 +167,12 @@ on exitFrame me
       
       sizeAdd = rect(-gEEprops.brushSize+1, -gEEprops.brushSize+1, gEEprops.brushSize-1, gEEprops.brushSize-1) * rect(16,16,16,16)
       --   put sizeAdd
-      sprite(21).rect = (rect(msTile-gLEProps.camPos, msTile-gLEProps.camPos) * rect(16,16,16,16)) + rect(0, 0, 16, 16) + sizeAdd
+      sprite(244).rect = (rect(msTile-gLEProps.camPos, msTile-gLEProps.camPos) * rect(16,16,16,16)) + rect(0, 0, 16, 16) + sizeAdd
       
   end case
   type sizeAdd: rect
   
-  sprite(15).rect = (rect(msTile-gLEProps.camPos, msTile-gLEProps.camPos) * rect(16,16,16,16)) + rect(0, 0, 16, 16)
+  sprite(243).rect = (rect(msTile-gLEProps.camPos, msTile-gLEProps.camPos) * rect(16,16,16,16)) + rect(0, 0, 16, 16)
   
   --put msTile
   
@@ -210,6 +229,15 @@ on updateEffectsMenu me, mv: point
   end repeat
   
   member("tileMenu").text = txt
+  --  if (gEffects[gEEprops.emPos.locH].efs[gEEprops.emPos.locV] <> void)then
+  efn = gEffects[gEEprops.emPos.locH].efs[gEEprops.emPos.locV]
+  
+  --if(efn.nm = "Foliage")or(efn.nm = "Mistletoe")or(efn.nm = "High Fern")or(efn.nm = "High Grass")or(efn.nm = "Little Flowers")or(efn.nm = "Wastewater Mold")or(efn.nm = "Spinets")or(efn.nm = "Small Springs")or(efn.nm = "Mini Growers")or(efn.nm = "Clovers")or(efn.nm = "Impacts")or(efn.nm = "Ring Chains")then
+  --  member("Drought Reserve text").text = "THIS EFFECT IS IN DROUGHT RESERVE, SEE THE IMPORTANT INFO FILE FOR THE CONDITIONS TO USE IT."
+  --else
+  member("Drought Reserve text").text = ""
+  --end if
+  --  end if
   
 end
 
@@ -259,100 +287,245 @@ on newEffect me
   fillWith = 0
   
   case ef.nm of
-    "slime":
+    "Slime":
+      ef.tp = "standardErosion"
+      ef.addProp(#repeats, 130)
+      ef.addProp(#affectOpenAreas, 0.5)
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["3D", ["Off", "On"], "Off"])
+      ef.options.add(["Affect Gradients and Decals", ["Yes", "No"], "Yes"])
+      
+    "LSlime":
       ef.tp = "standardErosion"
       ef.addProp(#repeats, 130)
       ef.addProp(#affectOpenAreas, 0.5)
       ef.options.add(["3D", ["Off", "On"], "Off"])
-    "slimeX3":
+      
+    "Fat Slime":
+      ef.tp = "standardErosion"
+      ef.addProp(#repeats, 200)
+      ef.addProp(#affectOpenAreas, 0.5)
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["3D", ["Off", "On"], "Off"])
+      ef.options.add(["Affect Gradients and Decals", ["Yes", "No"], "Yes"])
+      
+    "Scales":
+      ef.tp = "standardErosion"
+      ef.addProp(#repeats, 200)
+      ef.addProp(#affectOpenAreas, 0.05)
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      
+    "SlimeX3":
       ef.tp = "standardErosion"
       ef.addProp(#repeats, 130*3)
       ef.addProp(#affectOpenAreas, 0.5)
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       ef.options.add(["3D", ["Off", "On"], "Off"])
+      ef.options.add(["Affect Gradients and Decals", ["Yes", "No"], "Yes"])
+      
     "DecalsOnlySlime":
       ef.tp = "standardErosion"
       ef.addProp(#repeats, 130)
       ef.addProp(#affectOpenAreas, 0.5)
-    "melt":
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      
+    "Melt":
       ef.tp = "standardErosion"
       ef.addProp(#repeats, 60)
       ef.addProp(#affectOpenAreas, 0.5)
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["Affect Gradients and Decals", ["Yes", "No"], "No"])
       
-    "rust":
+    "Rust":
       ef.tp = "standardErosion"
       ef.addProp(#repeats, 60)
       ef.addProp(#affectOpenAreas, 0.2)
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       ef.options.add(["3D", ["Off", "On"], "Off"])
+      ef.options.add(["Affect Gradients and Decals", ["Yes", "No"], "No"])
       
-    "barnacles":
+    "Barnacles":
       ef.tp = "standardErosion"
       ef.addProp(#repeats, 60)
       ef.addProp(#affectOpenAreas, 0.3)
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       ef.options.add(["3D", ["Off", "On"], "Off"])
+      ef.options.add(["Affect Gradients and Decals", ["Yes", "No"], "No"])
       
-    "erode":
+    "Colored Barnacles":
+      ef.tp = "standardErosion"
+      ef.addProp(#repeats, 60)
+      ef.addProp(#affectOpenAreas, 0.3)
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["3D", ["Off", "On"], "Off"])
+      ef.options.add(["Effect Color", ["EffectColor1", "EffectColor2", "None"], "EffectColor2"])
+      
+    "Clovers":
+      ef.tp = "standardErosion"
+      ef.addProp(#repeats, 20)
+      ef.addProp(#affectOpenAreas, 0.2)
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["3D", ["Off", "On"], "Off"])
+      ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
+      
+    "Ivy":
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
+      ef.options.add(["Color Intensity", ["High", "Medium", "Low", "None", "Random"], "Medium"])
+      ef.options.add(["Fruit Density", ["High", "Medium", "Low", "None"], "None"])
+      ef.options.add(["Leaf Density", [], random(100)])
+      ef.crossScreen = 1
+      
+    "Little Flowers":
+      ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
+      ef.options.add(["Detail Color", ["Color1", "Color2", "Dead"], "Color2"])
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["Rotate", ["Off", "On"], "Off"])
+      
+    "Erode":
       ef.tp = "standardErosion"
       ef.addProp(#repeats, 80)
       ef.addProp(#affectOpenAreas, 0.5)
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      
+    "Sand":
+      ef.tp = "standardErosion"
+      ef.addProp(#repeats, 80)
+      ef.addProp(#affectOpenAreas, 0.5)
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["Effect Color", ["EffectColor1", "EffectColor2", "None"], "None"])
       
     "Super Erode":
       ef.tp = "standardErosion"
       ef.addProp(#repeats, 60)
       ef.addProp(#affectOpenAreas, 0.5)
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      
+    "Ultra Super Erode":
+      ef.tp = "standardErosion"
+      ef.addProp(#repeats, 60)
+      ef.addProp(#affectOpenAreas, 0.5)
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       
     "Roughen":
       ef.tp = "standardErosion"
       ef.addProp(#repeats, 30)
       ef.addProp(#affectOpenAreas, 0.05)
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      
+    "Impacts":
+      ef.tp = "standardErosion"
+      ef.addProp(#repeats, 75)
+      ef.addProp(#affectOpenAreas, 0.05)
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       
     "Super Melt":
       ef.tp = "standardErosion"
       ef.addProp(#repeats, 50)
       ef.addProp(#affectOpenAreas, 0.5)
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       ef.options.add(["3D", ["Off", "On"], "Off"])
+      ef.options.add(["Affect Gradients and Decals", ["Yes", "No"], "No"])
       
     "Destructive Melt":
       ef.tp = "standardErosion"
       ef.addProp(#repeats, 50)
       ef.addProp(#affectOpenAreas, 0.5)
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       ef.options.add(["3D", ["Off", "On"], "Off"])
+      ef.options.add(["Affect Gradients and Decals", ["Yes", "No"], "No"])
       
     "Rubble":
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       
-    "Fungi Flowers", "Lighthouse Flowers":
-      ef.options.add(["Layers", ["1", "2", "3"], "1"])
+    "Colored Rubble":
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["Effect Color", ["EffectColor1", "EffectColor2", "None"], "EffectColor2"])
       
-    "Fern", "Giant Mushroom", "sprawlBush", "featherFern", "Fungus Tree":
-      ef.options.add(["Layers", ["1", "2", "3"], "1"])
+    "Fungi Flowers", "Lighthouse Flowers":
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "1"])
+      
+    "Colored Fungi Flowers", "Colored Lighthouse Flowers":
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "1"])
       ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
       
-    "Root Grass", "Growers", "Cacti", "Rain Moss", "Seed Pods", "Grass", "Arm Growers", "Horse Tails", "Circuit Plants", "Feather Plants":
+    "Foliage", "High Grass", "High Fern", "Mistletoe", "Reeds", "Lavenders":
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
       
-      if(["Arm Growers", "Growers"].getPos( ef.nm ) > 0 )then
+    "Ring Chains":
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["Effect Color", ["EffectColor1", "EffectColor2", "None"], "None"])
+      
+    "Assorted Trash":
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["Effect Color", ["EffectColor1", "EffectColor2", "None"], "None"])
+      
+    "Fern", "Giant Mushroom", "Sprawlbush", "featherFern", "Fungus Tree":
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "1"])
+      ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
+      
+    "Root Grass", "Growers", "Cacti", "Rain Moss", "Dense Mold", "Seed Pods", "Grass", "Arm Growers", "Horse Tails", "Circuit Plants", "Feather Plants", "Mini Growers", "Left Facing Kelp", "Right Facing Kelp", "Club Moss", "Moss Wall", "Mixed Facing Kelp", "Bubble Grower":
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
+      
+      if(["Arm Growers", "Growers", "Mini Growers", "Left Facing Kelp", "Right Facing Kelp", "Mixed Facing Kelp", "Bubble Grower"].getPos( ef.nm ) > 0 )then
         ef.crossScreen = 1
       end if
       
-    "Rollers", "Thorn Growers", "Garbage Spirals":
+    "Rollers", "Thorn Growers", "Garbage Spirals", "Spinets", "Small Springs", "Fuzzy Growers":
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
       ef.crossScreen = 1
       
-    "wires":
+    "Wires":
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       ef.options.add(["Fatness", ["1px", "2px", "3px", "random"], "2px"])
       crossScreen = 1
       
-    "chains":
+    "Chains":
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       ef.options.add(["Size", ["Small", "FAT"], "Small"])
       ef.crossScreen = 1
-    "blackGoo":
+      
+    "Colored Wires":
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["Fatness", ["1px", "2px", "3px", "random"], "2px"])
+      ef.options.add(["Effect Color", ["EffectColor1", "EffectColor2", "None"], "EffectColor2"])
+      crossScreen = 1
+      
+    "Colored Chains":
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["Size", ["Small", "FAT"], "Small"])
+      ef.options.add(["Effect Color", ["EffectColor1", "EffectColor2", "None"], "EffectColor2"])
+      ef.crossScreen = 1
+      
+    "BlackGoo":
       fillWith = 100
+      
+    "Super BlackGoo":
+      fillWith = 100
+      
+    "DarkSlime":
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      
     "Hang Roots", "Thick Roots", "Shadow Plants":
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.crossScreen = 1
+      
+    "Colored Hang Roots", "Colored Thick Roots":
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
+      ef.crossScreen = 1
+      
+    "Colored Shadow Plants":
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
+      ef.crossScreen = 1
+      
+    "Root Plants":
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
       ef.crossScreen = 1
       
     "Restore As Scaffolding":
@@ -362,10 +535,24 @@ on newEffect me
       ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       
     "Ceramic Chaos":
-      ef.options.add(["Colored", ["None", "White"], "White"])
+      ef.options.add(["Ceramic Color", ["None", "Colored"], "Colored"])
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
       
     "DaddyCorruption":
-    "Slag":
+      ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      
+    "Wastewater Mold":
+      ef.options.add(["Color", ["Color1", "Color2", "Dead"], "Color2"])
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      
+    "Corruption No Eye", "Slag":
+      ef.options.add(["Layers", ["All", "1", "2", "3", "1:st and 2:nd", "2:nd and 3:rd"], "All"])
+      
+    "Stained Glass Properties":
+      ef.options.add(["Variation", ["1", "2", "3"], "1"])
+      ef.options.add(["Color 1", ["EffectColor1", "EffectColor2", "None"], "EffectColor1"])
+      ef.options.add(["Color 2", ["EffectColor1", "EffectColor2", "None"], "EffectColor2"])
       
   end case
   
@@ -395,9 +582,9 @@ end
 on useBrush me, pnt, fac
   if  gEEprops.mode = "editEffect" then
     strength = 10 + (90* _key.keyPressed("T"))
-    if ["BlackGoo", "Fungi Flowers", "Lighthouse Flowers", "Fern", "Giant Mushroom", "Sprawlbush", "featherFern", "Fungus Tree", "Restore As Scaffolding", "Restore As Pipes"].getPos(gEEprops.effects[gEEprops.editEffect].nm)>0 then
+    if ["BlackGoo", "Fungi Flowers", "Lighthouse Flowers", "Colored Fungi Flowers", "Colored Lighthouse Flowers", "High Fern", "High Grass", "Fern", "Giant Mushroom", "Sprawlbush", "featherFern", "Fungus Tree", "Restore As Scaffolding", "Restore As Pipes", "Small Springs", "Super BlackGoo", "Stained Glass Properties"].getPos(gEEprops.effects[gEEprops.editEffect].nm)>0 then
       strength = 10000
-      if  gEEprops.effects[gEEprops.editEffect].nm <> "BlackGoo" then
+      if  (gEEprops.effects[gEEprops.editEffect].nm <> "BlackGoo") and (gEEprops.effects[gEEprops.editEffect].nm <> "Super BlackGoo") then
         gEEprops.brushSize = 1
       end if
     end if
@@ -471,22 +658,22 @@ on initMode me, md
       if gEEprops.effects.count > 0 then
         gEEprops.selectEditEffect = gEEprops.editEffect
         --   me.updateEffectsL(0)
-        sprite(20).rect = rect((53*16)+8, 10*16, 1024-8, 41*16)
-        member("EEhelp").text = "Use W, S and the spacebar to select an effect to edit"
+        sprite(229).rect = rect((53*16)+8, 10*16, 1366-8, 41*16)
+        member("EEhelp").text = "Use W, S and the spacebar to select an effect to edit. Press N to return to the new effects menu."
       else
         --   me.updateEffectsL(0)
       end if
     "editEffect":
       -- me.updateEffectsL(0)
-      sprite(20).rect = rect(8, 42*16, 1024-8, 768-8)
-      member("EEhelp").text = "Edit effect: Use WASD to change the settings of the effect. Use the left and right mouse buttons to change the effect matrix"
+      sprite(229).rect = rect(8, 42*16, 1366-8, 768-8)
+      member("EEhelp").text = "Edit effect: Use W, A, S, D to change the settings of the effect. Press the spacebar to activate the selected option. Use the left and right mouse buttons to change the effect matrix. Press T while clicking to increase the strength of the brush. Press E to edit effects added previously. Press N to return to the new effects menu."
       -- me.drawEfMtrx(rect(1,1,52,40), gEEprops.editEffect)
     "createNew":
       -- me.drawEfMtrx(rect(1,1,52,40), 0)
-      sprite(20).rect = rect((53*16)+8, 8, 1024-8, 10*16)
-      member("EEhelp").text = "Create new: Use the WASD keys and the spacebar to select an effect to add"    
+      sprite(229).rect = rect((53*16)+8, 8, 1366-8, 10*16)
+      member("EEhelp").text = "Create new: Use the W, A, S, D keys and the spacebar to select an effect to add. Press E to edit effects added previously."    
     otherwise:
-      sprite(20).rect = rect(-1, -1, -1, -1)
+      sprite(229).rect = rect(-1, -1, -1, -1)
       member("EEhelp").text = "---"    
   end case
   gEEprops.mode = md
@@ -569,11 +756,20 @@ on changeOption me
         gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][3] = gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][3] +1
       end if
       gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][3] = restrict(gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][3], 1, 500)
+    "Leaf Density":
+      if _key.keyPressed("A") and _movie.window.sizeState <> #minimized then
+        gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][3] = gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][3] -1
+      end if
+      if _key.keyPressed("D") and _movie.window.sizeState <> #minimized then
+        gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][3] = gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][3] +1
+      end if
+      gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][3] = restrict(gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][3], 1, 100)
       
       
-    "Color", "Fatness", "Size", "Layers", "3D", "Colored":
+      
+    "Color", "Detail Color", "Fatness", "Size", "Layers", "3D", "Ceramic Color", "Effect Color", "Variation", "Color 1", "Color 2", "Affect Gradients and Decals", "Rotate", "Color Intensity", "Fruit Density":
       gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][3] = gEEprops.effects[gEEprops.editEffect].options[gEEprops.emPos.locV][2][gEEprops.emPos.locH]
-
+      
       
       
   end case

@@ -4,7 +4,16 @@ global gLEVEL, gLOprops, gLoadedName, gCameraProps, gEnvEditorProps, gPEprops, g
 
 
 on exitFrame me
-  if _key.keyPressed(36) and _movie.window.sizeState <> #minimized then
+  _movie.exitLock = TRUE
+  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+    _player.appMinimize()
+    
+  end if
+  if checkExit() then
+    _player.quit()
+  end if
+  
+  if _key.keyPressed(36) and _movie.window.sizeState <> #minimized and levelName <> void then
     
     --  l = [#mtrx:gLEProps.matrix, #gTEProps:gTEprops, #gEEprops:gEEprops, #gLightEProps:gLightEProps, #gLEVEL:gLEVEL, #gLOprops:gLOprops]
     str = ""
@@ -54,6 +63,10 @@ on exitFrame me
     gLoadedName = levelName
     member("Level Name").text = gLoadedName
     
+    _movie.go(7)
+    --else if _key.keyPressed(36) and _movie.window.sizeState <> #minimized and levelName = void then
+    --  levelName = "New Project"
+  else if _key.keyPressed(51) and _key.keyPressed(56) and _movie.window.sizeState <> #minimized then
     _movie.go(7)
   else
     go the frame

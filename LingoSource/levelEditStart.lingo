@@ -1,6 +1,15 @@
 global gLEProps, gLOprops, gDirectionKeys
 
 on exitFrame me
+  _movie.exitLock = TRUE
+  if _key.keyPressed(56) and _key.keyPressed(48) and _movie.window.sizeState <> #minimized then
+    _player.appMinimize()
+    
+  end if
+  if checkExit() then
+    _player.quit()
+  end if
+  
   
   cols = gLOprops.size.loch
   rows = gLOprops.size.locv
@@ -18,17 +27,17 @@ on exitFrame me
   repeat with q = 800 to 820 then
     sprite(q).visibility = 1
   end repeat
-  sprite(2).visibility = 1
-  sprite(8).visibility = 1
+  sprite(94).visibility = 1
+  sprite(168).visibility = 1
   
-  member("toolsImage").image = image(gLEProps.toolMatrix[1].count*32, gLEProps.toolMatrix.count*32, 16)
+  member("toolsImage2").image = image(gLEProps.toolMatrix[1].count*32, gLEProps.toolMatrix.count*32, 16)
   repeat with q = 1 to gLEProps.toolMatrix.count then
     repeat with c = 1 to gLEProps.toolMatrix[1].count then
       rct = rect((c-1)*32, (q-1)*32, c*32, q*32)
       nm = "icon"&gLEProps.toolMatrix[q][c]
-      member("toolsImage").image.copyPixels(member("icon"&gLEProps.toolMatrix[q][c]).image, rct, rect(0,0,32,32))
+      member("toolsImage2").image.copyPixels(member("icon"&gLEProps.toolMatrix[q][c]).image, rct, rect(0,0,32,32))
     end repeat
   end repeat
   
- gLEprops.levelEditors[1].p.mirrorPos = gLOprops.size.loch/2
+  gLEprops.levelEditors[1].p.mirrorPos = gLOprops.size.loch/2
 end

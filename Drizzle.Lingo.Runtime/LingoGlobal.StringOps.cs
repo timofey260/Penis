@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
@@ -87,8 +87,8 @@ public sealed partial class LingoGlobal
 
         public string String { get; }
 
-        public string this[int idx] => String[idx - 1].ToString();
-        public string this[LingoNumber idx] => this[(int) idx];
+        public string? this[int idx] => idx >= 1 && idx < String.Length ? String[idx - 1].ToString() : null;
+        public string? this[LingoNumber idx] => this[(int) idx];
 
         // I have no idea why this is necessary.
         public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
