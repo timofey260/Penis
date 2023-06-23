@@ -13,15 +13,15 @@ $baseDir = Join-Path -Resolve $PSScriptRoot ..
 
 Push-Location $baseDir
 
-$releaseBuildPath = Join-Path $basedir "ReleaseBuild" "$Configuration.$Rid"
-$releaseDir = Join-Path $basedir "Release"
+$releaseBuildPath = Join-Path $baseDir "ReleaseBuild" "$Configuration.$Rid"
+$releaseDir = Join-Path $baseDir "Release"
 $publishDirEditor = Join-Path $baseDir "Drizzle.Editor" "bin" $Configuration $CURRENT_TFM $Rid "publish"
 $publishDirConsole = Join-Path $baseDir "Drizzle.ConsoleApp" "bin" $Configuration $CURRENT_TFM $Rid "publish"
 $baseDataDir = Join-Path $baseDir "Data"
 $releaseDataDir = Join-Path $releaseBuildPath "Data"
 
 # Create directory if not exist.
-New-Item -Force $(Join-Path $basedir "Release") -ItemType Directory | Out-Null
+New-Item -Force $(Join-Path $baseDir "Release") -ItemType Directory | Out-Null
 New-Item -Force $releaseBuildPath -ItemType Directory | Out-Null
 
 # Clear directories of previous stuff
@@ -50,6 +50,9 @@ New-Item -ItemType File $(Join-Path $releaseBuildPath "Data" "rendered_levels_go
 Copy-Item -Recurse $(Join-Path $baseDataDir "Graphics") $releaseDataDir
 Copy-Item -Recurse $(Join-Path $baseDataDir "Props") $releaseDataDir
 Copy-Item -Recurse $(Join-Path $baseDataDir "Cast") $releaseDataDir
+Copy-Item -Recurse $(Join-Path $baseDataDir "Materials") $releaseDataDir
+Copy-Item $(Join-Path $baseDataDir "editorConfig.txt") $releaseDataDir
+Copy-Item $(Join-Path $baseDataDir "effectsInit.txt") $releaseDataDir
 
 # Compress final zip
 Compress-Archive $(Join-Path $releaseBuildPath "*") -DestinationPath $(Join-Path $releaseDir "Drizzle.base.$Configuration.$Rid.zip") -CompressionLevel Optimal -Force
