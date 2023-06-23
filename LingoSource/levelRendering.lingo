@@ -931,12 +931,13 @@ end
 
 on drawATileTile(q: number, c: number, l: number, tl, frntImg: image, dt: list)
   global gAnyDecals
-  tileImage = cacheLoadImage("Graphics" & the dirSeparator & tl.nm & ".png")
   
   --INTERNAL
-  --if (checkDRInternal(tl.nm)) then
-  --  tileImage = member(tl.nm).image
-  --end if
+  if (checkDRInternal(tl.nm)) then
+    tileImage = member(tl.nm).image
+  else
+    tileImage = cacheLoadImage("Graphics" & the dirSeparator & tl.nm & ".png")
+  end if
   
   q = q - gRenderCameraTilePos.locH
   c = c - gRenderCameraTilePos.locV
