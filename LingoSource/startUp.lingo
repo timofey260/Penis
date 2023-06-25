@@ -200,7 +200,7 @@ on exitFrame me
   gTiles[3].tls.add( [#nm:"Dune Sand", #sz:point(1,1), #specs:[0], #renderType:"tiles", #color:color(255, 255, 100)])--, #tags:[]]    )
   
   savLM = member("matInit")
-  member("matInit").importFileInto("Materials\Init.txt")
+  member("matInit").importFileInto("Materials" & the dirSeparator & "Init.txt")
   savLM.name = "matInit"
   DRCustomMatList = []
   if (savLM.text <> VOID) and (savLM.text <> "") then
