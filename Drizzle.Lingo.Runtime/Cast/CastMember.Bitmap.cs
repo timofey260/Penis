@@ -1,4 +1,4 @@
-﻿namespace Drizzle.Lingo.Runtime.Cast;
+namespace Drizzle.Lingo.Runtime.Cast;
 
 public partial class CastMember
 {

@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text;
 
 namespace Drizzle.Lingo.Runtime.Cast;
@@ -25,19 +25,30 @@ public sealed partial class CastMember
 
     private void ImportFileImplText(string path)
     {
-        using var sr = new StreamReader(path);
-        var sb = new StringBuilder();
-
-        while (true)
+        try
         {
-            var line = sr.ReadLine();
-            if (line == null)
-                break;
+            using var sr = new StreamReader(path);
+            var sb = new StringBuilder();
 
-            sb.Append(line);
-            sb.Append('\r');
+            while (true)
+            {
+                var line = sr.ReadLine();
+                if (line == null)
+                    break;
+
+                sb.Append(line);
+                sb.Append('\r');
+            }
+
+            text = sb.ToString();
         }
-
-        text = sb.ToString();
+        catch(FileNotFoundException)
+        {
+            text = "";
+        }
+        catch(DirectoryNotFoundException)
+        {
+            text = "";
+        }
     }
 }

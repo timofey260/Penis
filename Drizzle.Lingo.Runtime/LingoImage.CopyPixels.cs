@@ -373,7 +373,7 @@ public sealed unsafe partial class LingoImage
             // if edges are parallel, this is a linear equation
             if (MathF.Abs(k2) < QuadInvBilinearLinearCutOff)
             {
-                res = new Vector2((h.X * k1 + f.X * k0) / (e.X * k1 - g.X * k0), -k0 / k1);
+                res = new Vector2(Vector2.Dot(h, e) / Vector2.Dot(e, e), Vector2.Dot(h, f) / Vector2.Dot(f, f));
             }
             // otherwise, it's a quadratic
             else
@@ -603,14 +603,22 @@ public sealed unsafe partial class LingoImage
             // if edges are parallel, this is a linear equation
             rX = Avx.Divide(
                 Avx.Add(
-                    Avx.Multiply(hX, k1),
-                    Avx.Multiply(fX, k0)
+                    Avx.Multiply(hX, eX),
+                    Avx.Multiply(hY, eY)
                 ),
-                Avx.Subtract(
-                    Avx.Multiply(eX, k1),
-                    Avx.Multiply(gX, k0))
+                Avx.Add(
+                    Avx.Multiply(eX, eX),
+                    Avx.Multiply(eY, eY))
             );
-            rY = Avx.Divide(Avx.Subtract(Vector256<float>.Zero, k0), k1);
+            rY = Avx.Divide(
+                Avx.Add(
+                    Avx.Multiply(hX, fX),
+                    Avx.Multiply(hY, fY)
+                ),
+                Avx.Add(
+                    Avx.Multiply(fX, fX),
+                    Avx.Multiply(fY, fY))
+            );
         }
 
         Vector256<float> v;
