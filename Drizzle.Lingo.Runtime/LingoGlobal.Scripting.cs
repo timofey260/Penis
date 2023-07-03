@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using Drizzle.Lingo.Runtime.Parser;
 using Drizzle.Lingo.Runtime.Scripting;
@@ -21,7 +21,7 @@ public sealed partial class LingoGlobal
         // This is fine for the level editor, but if you ever do something funny, you've been warned.
         try
         {
-            var parsedExpression = LingoParser.ExpressionNoOps.ParseOrThrow(trimmed);
+            var parsedExpression = LingoParser.Expression.ParseOrThrow(trimmed);
             return Interpreter.Evaluate(parsedExpression, LingoRuntime);
         }
         catch

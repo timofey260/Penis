@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Reflection;
 using Drizzle.Lingo.Runtime.Parser;
@@ -26,8 +26,40 @@ public class Interpreter
             AstNode.String s => s.Value,
             AstNode.Symbol symbol => new LingoSymbol(symbol.Value),
             AstNode.UnaryOperator unaryOperator => EvalUnaryOp(unaryOperator, scope),
+            AstNode.BinaryOperator binaryOperator => EvalBinaryOp(binaryOperator, scope),
             _ => throw new ArgumentOutOfRangeException(nameof(node))
         };
+    }
+
+    private static object? EvalBinaryOp(AstNode.BinaryOperator binaryOperator, InterpreterScope scope)
+    {
+        dynamic? lhs = EvalNode(binaryOperator.Left, scope);
+        dynamic? rhs = EvalNode(binaryOperator.Right, scope);
+
+        // Operators that need to map to special functions.
+        object? result = binaryOperator.Type switch
+        {
+            AstNode.BinaryOperatorType.Contains => LingoGlobal.contains(lhs, rhs)(lhs, rhs),
+            AstNode.BinaryOperatorType.Starts => LingoGlobal.starts(lhs, rhs)(lhs, rhs),
+            AstNode.BinaryOperatorType.LessThan => LingoGlobal.op_lt(lhs, rhs),
+            AstNode.BinaryOperatorType.LessThanOrEqual => LingoGlobal.op_le(lhs, rhs),
+            AstNode.BinaryOperatorType.NotEqual => LingoGlobal.op_ne(lhs, rhs),
+            AstNode.BinaryOperatorType.Equal => LingoGlobal.op_eq(lhs, rhs),
+            AstNode.BinaryOperatorType.GreaterThan => LingoGlobal.op_gt(lhs, rhs),
+            AstNode.BinaryOperatorType.GreaterThanOrEqual => LingoGlobal.op_ge(lhs, rhs),
+            AstNode.BinaryOperatorType.And => LingoGlobal.op_and(lhs, rhs),
+            AstNode.BinaryOperatorType.Or => LingoGlobal.op_or(lhs, rhs),
+            AstNode.BinaryOperatorType.Add => LingoGlobal.op_add(lhs, rhs),
+            AstNode.BinaryOperatorType.Subtract => LingoGlobal.op_sub(lhs, rhs),
+            AstNode.BinaryOperatorType.Multiply => LingoGlobal.op_mul(lhs, rhs),
+            AstNode.BinaryOperatorType.Divide => LingoGlobal.op_div(lhs, rhs),
+            AstNode.BinaryOperatorType.Mod => LingoGlobal.op_mod(lhs, rhs),
+            AstNode.BinaryOperatorType.ConcatSpace => (lhs as string) + " " + (rhs as string),
+            AstNode.BinaryOperatorType.Concat => (lhs as string) + (rhs as string),
+            _ => throw new NotImplementedException(nameof(binaryOperator))
+        };
+
+        return result;
     }
 
     private static object? EvalUnaryOp(AstNode.UnaryOperator unaryOperator, InterpreterScope scope)
