@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Drizzle.Lingo.Runtime;
 
 namespace Drizzle.Logic.Rendering;
@@ -32,6 +32,9 @@ public sealed partial class LevelRenderer
         var dptsL = (LingoList)Movie.dptsL;
         var fogDptsL = (LingoList)Movie.fogDptsL;
         var gDecalColors = (LingoList)Movie.gDecalColors;
+        var grimeActive = Movie.grimeActive > 0;
+        var grimeOnGradients = Movie.grimeOnGradients > 0;
+        var bkgFix = Movie.bkgFix > 0;
 
         var c = (int)Movie.c - 1;
         for (var q = 0; q < 1400; q++)
@@ -108,6 +111,16 @@ public sealed partial class LevelRenderer
                     palCol = 2;
                     effectColor = 2;
                 }
+                else if (getColPacked == new LingoColor(255, 150, 255).BitPack)
+                {
+                    palCol = 3;
+                    effectColor = 1;
+                }
+                else if (getColPacked == new LingoColor(150, 255, 255).BitPack)
+                {
+                    palCol = 3;
+                    effectColor = 2;
+                }
                 else if (getColPacked == new LingoColor(150, 0, 0).BitPack)
                 {
                     palCol = 1;
@@ -122,6 +135,16 @@ public sealed partial class LevelRenderer
                 {
                     palCol = 3;
                     dark = 1;
+                }
+                else if (getColPacked == new LingoColor(150, 0, 150).BitPack)
+                {
+                    palCol = 1;
+                    effectColor = 1;
+                }
+                else if (getColPacked == new LingoColor(0, 150, 150).BitPack)
+                {
+                    palCol = 1;
+                    effectColor = 2;
                 }
 
                 if (getColor.GreenByte == 255 && getColor.BlueByte == 150)
@@ -139,14 +162,18 @@ public sealed partial class LevelRenderer
 
                 var greenCol = effectColor;
 
-                if (rainBowFac > 5)
+                if(grimeActive
+                    && (grimeOnGradients || greenCol is not 1 or 2 or 3))
                 {
-                    greenCol += 4;
-                    RainbowifyPixel((q, c));
-                }
-                else if (rainBowMask.getpixel(q, c) != LingoColor.White)
-                {
-                    greenCol += 4;
+                    if (rainBowFac > 5f)
+                    {
+                        greenCol += 4;
+                        RainbowifyPixel(new Vector2i(q, c));
+                    }
+                    else if (rainBowMask.getpixel(q, c).BitPack != LingoColor.PackBlack)
+                    {
+                        greenCol += 4;
+                    }
                 }
 
                 if (effectColor > 0)
@@ -159,6 +186,10 @@ public sealed partial class LevelRenderer
                     {
                         var gradient = effectColor == 1 ? flattenedGradientA : flattenedGradientB;
                         col.BlueByte = (byte)(255 - gradient.getpixel(q, c).RedByte);
+                    }
+                    if(col.BlueByte == 255 && bkgFix)
+                    {
+                        col.BlueByte = 254;
                     }
                 }
                 else
