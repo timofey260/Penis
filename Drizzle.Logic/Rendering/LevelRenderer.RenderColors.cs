@@ -170,7 +170,7 @@ public sealed partial class LevelRenderer
                         greenCol += 4;
                         RainbowifyPixel(new Vector2i(q, c));
                     }
-                    else if (rainBowMask.getpixel(q, c).BitPack != LingoColor.PackBlack)
+                    else if (rainBowMask.getpixel(q, c).BitPack != LingoColor.PackWhite)
                     {
                         greenCol += 4;
                     }
