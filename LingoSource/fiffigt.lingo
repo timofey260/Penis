@@ -677,7 +677,7 @@ on newMakeLevel(lvlName)
   
   foundFile = 0
   
-  put txt
+  --put txt
   
   repeat with i = 1 to 1000 then
     n = getNthFileNameInFolder(the moviePath & "Levels", i)

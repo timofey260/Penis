@@ -1,4 +1,5 @@
 #!/usr/bin/env pwsh
+#Requires -Version 7
 
 param(
     [parameter(Mandatory=$true)]

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -94,7 +94,7 @@ public sealed class RenderViewModel : ViewModelBase, ILingoRuntimeManager
                 // onNext
                 x =>
                 {
-                    Log.Debug("Render status next: {Status}", x);
+                    Log.Verbose("Render status next: {Status}", x);
 
                     CameraIndex = x.CameraIndex;
                     StageEnum = x.Stage.Stage;
