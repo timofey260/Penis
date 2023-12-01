@@ -266,13 +266,19 @@ on exitFrame me
         
         vl: list = value(sav.text.line[q].char[2..sav.text.line[q].length])
         
-        gTiles.add( [#nm:vl[1], #clr:vl[2], #tls:[]]    )
+		if vl = void then
+          writeException("Tile Init Error", "Line" && q && "is malformed in the Init.txt file from your Graphics folder.")
+        else
+          gTiles.add( [#nm:vl[1], #clr:vl[2], #tls:[]]    )
+        end if
         
         
-      else 
+      else if value(sav.text.line[q]) = void then
+        writeException("Tile Init Error", "Line" && q && "is malformed in the Init.txt file from your Graphics folder.")
+	  else
         ad = value(sav.text.line[q])
         debugline = sav.text.line[q]
-        
+		
         sav2: member = member("previewImprt")
         member("previewImprt").importFileInto("Graphics" & the dirSeparator &ad.nm&".png")
         sav2.name = "previewImprt"
@@ -350,9 +356,15 @@ on exitFrame me
         
         vl = value(sav.text.line[q].char[2..sav.text.line[q].length])
         
-        gProps.add( [#nm:vl[1], #clr:vl[2], #prps:[]]    )
+        if vl = void then
+          writeException("Prop Init Error", "Line" && q && "is malformed in the Init.txt file from your Props folder.")
+        else
+          gProps.add( [#nm:vl[1], #clr:vl[2], #prps:[]]    )
+        end if
         
-      else 
+      else if value(sav.text.line[q]) = void then
+        writeException("Prop Init Error", "Line" && q && "is malformed in the Init.txt file from your Props folder.")
+      else
         ad = value(sav.text.line[q])
         strng: string = sav.text.line[q]
         ad.addProp(#category, gProps.count)
