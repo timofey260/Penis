@@ -510,12 +510,12 @@ public sealed unsafe partial class LingoImage
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector256<float> Cross2dAvx2(
         Vector256<float> aX, Vector256<float> aY, Vector256<float> bX, Vector256<float> bY) =>
-        Avx.Subtract(Avx.Multiply(aX, bY), Avx.Multiply(aY, bX));
+        aX * bY - aY * bX;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector256<float> Dot2dAvx2(
         Vector256<float> aX, Vector256<float> aY, Vector256<float> bX, Vector256<float> bY) =>
-        Avx.Add(Avx.Multiply(aX, bX), Avx.Multiply(aY, bY));
+        aX * bX + aY * bY;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static (Vector256<float> s, Vector256<float> t) QuadInvBilinearAvx2(
@@ -548,33 +548,27 @@ public sealed unsafe partial class LingoImage
         var pmaX = Avx.Subtract(pX, aX);
         var pmaY = Avx.Subtract(pY, aY);
 
-        var b = Avx.Subtract(k3v, Cross2dAvx2(k1x, k1y, pmaX, pmaY));
+        var b = k3v - Cross2dAvx2(k1x, k1y, pmaX, pmaY);
         var c = Cross2dAvx2(pmaX, pmaY, k4x, k4y);
-        var rad = Avx.Sqrt(Avx.Add(Avx.Multiply(b, b), Avx.Multiply(k2v, c)));
+        var rad = Avx.Sqrt(b * b + k2v * c);
 
-        var v1 = Avx.Multiply(Vector256.Create(-2f), c);
-        v1 = Avx.Divide(v1, Avx.Add(b, rad)); // Front facing result
-        var e1X = pmaX - Avx.Multiply(k5x, v1);
-        var e1Y = pmaY - Avx.Multiply(k5y, v1);
-        var u1 = Dot2dAvx2(e1X, e1Y, e1X, e1Y);
-        u1 = Avx.Divide(u1, Dot2dAvx2(Avx.Add(k4x, Avx.Multiply(k1x, v1)), Avx.Add(k4y, Avx.Multiply(k1y, v1)), e1X, e1Y));
+        var v1 = -2f * c / (b + rad); // Front facing result
+        var e1X = pmaX - k5x * v1;
+        var e1Y = pmaY - k5y * v1;
+        var u1 = Dot2dAvx2(e1X, e1Y, e1X, e1Y) / Dot2dAvx2(k4x + k1x * v1, k4y + k1y * v1, e1X, e1Y);
 
         var oobMask = Avx.Or(
                 Avx.Or(Avx.CompareLessThan(u1, Vector256<float>.Zero), Avx.CompareGreaterThan(u1, Vector256.Create(1f))),
                 Avx.Or(Avx.CompareLessThan(v1, Vector256<float>.Zero), Avx.CompareGreaterThan(v1, Vector256.Create(1f))));
 
-        if (oobMask != Vector256<float>.Zero)
-        {
-            var v2 = Avx.Multiply(Vector256.Create(-2f), c);
-            v2 = Avx.Divide(v2, Avx.Subtract(b, rad)); // Back facing result
-            var e2X = pmaX - Avx.Multiply(k5x, v2);
-            var e2Y = pmaY - Avx.Multiply(k5y, v2);
-            var u2 = Dot2dAvx2(e2X, e2Y, e2X, e2Y);
-            u2 = Avx.Divide(u2, Dot2dAvx2(Avx.Add(k4x, Avx.Multiply(k1x, v2)), Avx.Add(k4y, Avx.Multiply(k1y, v2)), e2X, e2Y));
-            return (Avx.BlendVariable(u1, u2, oobMask), Avx.BlendVariable(v1, v2, oobMask));
-        }
+        if (oobMask == Vector256<float>.Zero)
+            return (u1, v1);
 
-        return (u1, v1);
+        var v2 = -2f * c / (b - rad); // Back facing result
+        var e2X = pmaX - k5x * v2;
+        var e2Y = pmaY - k5y * v2;
+        var u2 = Dot2dAvx2(e2X, e2Y, e2X, e2Y) / Dot2dAvx2(k4x + k1x * v2, k4y + k1y * v2, e2X, e2Y);
+        return (Avx.BlendVariable(u1, u2, oobMask), Avx.BlendVariable(v1, v2, oobMask));
     }
 
     private static void CopyPixelsImpl(
