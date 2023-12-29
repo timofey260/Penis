@@ -12,9 +12,6 @@ namespace Drizzle.Lingo.Runtime;
 
 public sealed unsafe partial class LingoImage
 {
-    private const float QuadInvBilinearLinearCutOff = 0.0001f;
-    private const float QuadInvTriCheckCutOff = 0.001f;
-
     // Not used by the editor (but there is a similar lingo API)
     // Mostly just for unit tests right now.
     // Maybe optimizations for the editor later.
@@ -304,27 +301,25 @@ public sealed unsafe partial class LingoImage
         ReadOnlySpan<TSrcData> srcSpan = MemoryMarshal.Cast<byte, TSrcData>(src.ImageBuffer);
         var dstSpan = MemoryMarshal.Cast<byte, TDstData>(dst.ImageBuffer);
 
-        // TODO: guard against degenerate shape?
-
         var a = destQuad.TopLeft;
         var b = destQuad.TopRight;
         var c = destQuad.BottomRight;
         var d = destQuad.BottomLeft;
 
         // Pull out parameters in InvBilinear that do not change for the quad.
-        var e = b - a;
-        var f = d - a;
-        var g = a - b + c - d;
+        Vector2 k1 = c - d + a - b;
+        float k2 = -4f * Cross2d(k1, d - a);
+        float k3 = Cross2d(a - d, b - a);
+        Vector2 k4 = b - a;
+        Vector2 k5 = d - a;
 
-        var k2 = Cross2d(g, f);
-
-        for (var y = boundT; y < boundB; y++)
+        for (int y = boundT; y < boundB; y++)
         {
-            for (var x = boundL; x < boundR; x++)
+            for (int x = boundL; x < boundR; x++)
             {
                 var p = new Vector2(x + 0.5f, y + 0.5f);
 
-                var st = InvBilinear(p, a, e, f, g, k2);
+                var st = InvBilinear(p, a, k1, k2, k3, k4, k5);
 
                 if (MathF.Max(MathF.Abs(st.X - 0.5f), MathF.Abs(st.Y - 0.5f)) < 0.5f)
                 {
@@ -347,55 +342,19 @@ public sealed unsafe partial class LingoImage
 
         static float Lerp(float x, float y, float a) => x + a * (y - x);
 
-        // https://iquilezles.org/www/articles/ibilinear/ibilinear.htm
-        static Vector2 InvBilinear(Vector2 p, Vector2 a, Vector2 e, Vector2 f, Vector2 g, float k2)
+        // https://www.desmos.com/calculator/pkkdfmvfyw
+        static Vector2 InvBilinear(Vector2 p, Vector2 a, Vector2 k1, float k2, float k3, Vector2 k4, Vector2 k5)
         {
-            Vector2 res;
-
-            var h = p - a;
-
-            var k1 = Cross2d(e, f) + Cross2d(h, g);
-            var k0 = Cross2d(h, e);
-
-            if (Math.Abs(k0) > QuadInvTriCheckCutOff)
-            {
-                // From the shadertoy comments (by the original author):
-                // Fixes coordinates so large coordinate spaces don't get massive distortions in some edge cases.
-
-                // NOTE: when drawing a triangle (i.e. two corners on the same spot),
-                // k0 will be zero, and doing this will break everything.
-
-                k2 /= k0;
-                k1 /= k0;
-                k0 = 1.0f;
-            }
-
-            // if edges are parallel, this is a linear equation
-            if (MathF.Abs(k2) < QuadInvBilinearLinearCutOff)
-            {
-                res = new Vector2(Vector2.Dot(h, e) / Vector2.Dot(e, e), Vector2.Dot(h, f) / Vector2.Dot(f, f));
-            }
-            // otherwise, it's a quadratic
-            else
-            {
-                var w = k1 * k1 - 4.0f * k0 * k2;
-                if (w < 0.0) return new Vector2(-1.0f);
-                w = MathF.Sqrt(w);
-
-                var ik2 = 0.5f / k2;
-                var v = (-k1 - w) * ik2;
-                var u = (h.X - f.X * v) / (e.X + g.X * v);
-
-                if (u < 0.0 || u > 1.0 || v < 0.0 || v > 1.0)
-                {
-                    v = (-k1 + w) * ik2;
-                    u = (h.X - f.X * v) / (e.X + g.X * v);
-                }
-
-                res = new Vector2(u, v);
-            }
-
-            return res;
+            float b = k3 - Cross2d(k1, p - a);
+            float c = Cross2d(p - a, k4);
+            float rad = MathF.Sqrt(b * b + k2 * c);
+            float v1 = -2f * c / (b + rad);
+            Vector2 e1 = p - a - k5 * v1;
+            float u1 = Vector2.Dot(e1, e1) / Vector2.Dot(k4 + k1 * v1, e1);
+            float v2 = -2f * c / (b - rad);
+            Vector2 e2 = p - a - k5 * v2;
+            float u2 = Vector2.Dot(e2, e2) / Vector2.Dot(k4 + k1 * v2, e2);
+            return MathF.Max(MathF.Abs(u1 - 0.5f), MathF.Abs(v1 - 0.5f)) <= 0.5f ? new Vector2(u1, v1) : new Vector2(u2, v2);
         }
     }
 
@@ -443,19 +402,17 @@ public sealed unsafe partial class LingoImage
         ReadOnlySpan<TSrcData> srcSpan = MemoryMarshal.Cast<byte, TSrcData>(src.ImageBuffer);
         var dstSpan = MemoryMarshal.Cast<byte, TDstData>(dst.ImageBuffer);
 
-        // TODO: guard against degenerate shape?
-
         var a = destQuad.TopLeft;
         var b = destQuad.TopRight;
         var c = destQuad.BottomRight;
         var d = destQuad.BottomLeft;
 
         // Pull out parameters in InvBilinear that do not change for the quad.
-        var e = b - a;
-        var f = d - a;
-        var g = a - b + c - d;
-
-        var k2 = Vector256.Create(Cross2d(g, f));
+        Vector2 k1 = c - d + a - b;
+        float k2 = -4f * Cross2d(k1, d - a);
+        float k3 = Cross2d(a - d, b - a);
+        Vector2 k4 = b - a;
+        Vector2 k5 = d - a;
 
         var posMask = Vector256.Create(0, 1, 2, 3, 4, 5, 6, 7);
         var widthVec = Vector256.Create(boundR);
@@ -470,7 +427,7 @@ public sealed unsafe partial class LingoImage
                 var writeMask = Avx2.CompareGreaterThan(widthVec, pos);
 
                 var xVec = Avx.Add(Avx.ConvertToVector256Single(pos), Vector256.Create(0.5f));
-                var (s, t) = QuadInvBilinearAvx2(xVec, yVec, a, e, f, g, k2);
+                var (s, t) = QuadInvBilinearAvx2(xVec, yVec, a, k1, k2, k3, k4, k5);
 
                 var vecHalf = Vector256.Create(0.5f);
                 var maskNeg = Vector256.Create(-0.0f);
@@ -556,112 +513,68 @@ public sealed unsafe partial class LingoImage
         Avx.Subtract(Avx.Multiply(aX, bY), Avx.Multiply(aY, bX));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Vector256<float> Dot2dAvx2(
+        Vector256<float> aX, Vector256<float> aY, Vector256<float> bX, Vector256<float> bY) =>
+        Avx.Add(Avx.Multiply(aX, bX), Avx.Multiply(aY, bY));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static (Vector256<float> s, Vector256<float> t) QuadInvBilinearAvx2(
         Vector256<float> pX,
         Vector256<float> pY,
         Vector2 a,
-        Vector2 e,
-        Vector2 f,
-        Vector2 g,
-        Vector256<float> k2)
+        Vector2 k1,
+        float k2,
+        float k3,
+        Vector2 k4,
+        Vector2 k5)
     {
         // Please refer to the scalar version up above to have the slightest of a clue what is going on here.
         var aX = Vector256.Create(a.X);
         var aY = Vector256.Create(a.Y);
 
-        var hX = Avx.Subtract(pX, aX);
-        var hY = Avx.Subtract(pY, aY);
+        var k1x = Vector256.Create(k1.X);
+        var k1y = Vector256.Create(k1.Y);
 
-        var eX = Vector256.Create(e.X);
-        var eY = Vector256.Create(e.Y);
+        var k2v = Vector256.Create(k2);
 
-        var fX = Vector256.Create(f.X);
-        var fY = Vector256.Create(f.Y);
+        var k3v = Vector256.Create(k3);
 
-        var gX = Vector256.Create(g.X);
-        var gY = Vector256.Create(g.Y);
+        var k4x = Vector256.Create(k4.X);
+        var k4y = Vector256.Create(k4.Y);
 
-        var k1 = Avx.Add(Cross2dAvx2(eX, eY, fX, fY), Cross2dAvx2(hX, hY, gX, gY));
-        var k0 = Cross2dAvx2(hX, hY, eX, eY);
+        var k5x = Vector256.Create(k5.X);
+        var k5y = Vector256.Create(k5.Y);
 
-        var k0Abs = Avx.AndNot(Vector256.Create(-0.0f), k0);
-        var triCheck = Avx.CompareLessThan(
-            k0Abs,
-            Vector256.Create(QuadInvTriCheckCutOff));
+        var pmaX = Avx.Subtract(pX, aX);
+        var pmaY = Avx.Subtract(pY, aY);
 
-        k2 = Avx.BlendVariable(Avx.Divide(k2, k0), k2, triCheck);
-        k1 = Avx.BlendVariable(Avx.Divide(k1, k0), k1, triCheck);
-        k0 = Avx.BlendVariable(Vector256.Create(1.0f), k0, triCheck);
+        var b = Avx.Subtract(k3v, Cross2dAvx2(k1x, k1y, pmaX, pmaY));
+        var c = Cross2dAvx2(pmaX, pmaY, k4x, k4y);
+        var rad = Avx.Sqrt(Avx.Add(Avx.Multiply(b, b), Avx.Multiply(k2v, c)));
 
-        var k2Abs = Avx.AndNot(Vector256.Create(-0.0f), k2);
-        var linearMask = Avx.CompareLessThan(k2Abs, Vector256.Create(QuadInvBilinearLinearCutOff));
+        var v1 = Avx.Multiply(Vector256.Create(-2f), c);
+        v1 = Avx.Divide(v1, Avx.Add(b, rad)); // Front facing result
+        var e1X = pmaX - Avx.Multiply(k5x, v1);
+        var e1Y = pmaY - Avx.Multiply(k5y, v1);
+        var u1 = Dot2dAvx2(e1X, e1Y, e1X, e1Y);
+        u1 = Avx.Divide(u1, Dot2dAvx2(Avx.Add(k4x, Avx.Multiply(k1x, v1)), Avx.Add(k4y, Avx.Multiply(k1y, v1)), e1X, e1Y));
 
-        Vector256<float> rX;
-        Vector256<float> rY;
+        var oobMask = Avx.Or(
+                Avx.Or(Avx.CompareLessThan(u1, Vector256<float>.Zero), Avx.CompareGreaterThan(u1, Vector256.Create(1f))),
+                Avx.Or(Avx.CompareLessThan(v1, Vector256<float>.Zero), Avx.CompareGreaterThan(v1, Vector256.Create(1f))));
 
+        if (oobMask != Vector256<float>.Zero)
         {
-            // if edges are parallel, this is a linear equation
-            rX = Avx.Divide(
-                Avx.Add(
-                    Avx.Multiply(hX, eX),
-                    Avx.Multiply(hY, eY)
-                ),
-                Avx.Add(
-                    Avx.Multiply(eX, eX),
-                    Avx.Multiply(eY, eY))
-            );
-            rY = Avx.Divide(
-                Avx.Add(
-                    Avx.Multiply(hX, fX),
-                    Avx.Multiply(hY, fY)
-                ),
-                Avx.Add(
-                    Avx.Multiply(fX, fX),
-                    Avx.Multiply(fY, fY))
-            );
+            var v2 = Avx.Multiply(Vector256.Create(-2f), c);
+            v2 = Avx.Divide(v2, Avx.Subtract(b, rad)); // Back facing result
+            var e2X = pmaX - Avx.Multiply(k5x, v2);
+            var e2Y = pmaY - Avx.Multiply(k5y, v2);
+            var u2 = Dot2dAvx2(e2X, e2Y, e2X, e2Y);
+            u2 = Avx.Divide(u2, Dot2dAvx2(Avx.Add(k4x, Avx.Multiply(k1x, v2)), Avx.Add(k4y, Avx.Multiply(k1y, v2)), e2X, e2Y));
+            return (Avx.BlendVariable(u1, u2, oobMask), Avx.BlendVariable(v1, v2, oobMask));
         }
 
-        Vector256<float> v;
-        Vector256<float> u;
-
-        {
-            // otherwise, it's a quadratic
-            var w = Avx.Subtract(
-                Avx.Multiply(k1, k1),
-                Avx.Multiply(Vector256.Create(4.0f), Avx.Multiply(k0, k2)));
-
-            var wMask = Avx.CompareLessThan(w, Vector256<float>.Zero);
-
-            w = Avx.Sqrt(w);
-
-            var ik2 = Avx.Divide(Vector256.Create(0.5f), k2);
-            v = Avx.Multiply(Avx.Subtract(Avx.Subtract(Vector256<float>.Zero, k1), w), ik2);
-            u = Avx.Divide(Avx.Subtract(hX, Avx.Multiply(fX, v)), Avx.Add(eX, Avx.Multiply(gX, v)));
-
-            var vec1 = Vector256.Create(1f);
-
-            var oobMask = Avx.Or(
-                Avx.Or(Avx.CompareLessThan(u, Vector256<float>.Zero), Avx.CompareGreaterThan(u, vec1)),
-                Avx.Or(Avx.CompareLessThan(v, Vector256<float>.Zero), Avx.CompareGreaterThan(v, vec1)));
-
-            v = Avx.BlendVariable(v, Avx.Multiply(Avx.Subtract(w, k1), ik2), oobMask);
-            u = Avx.BlendVariable(
-                u,
-                Avx.Divide(
-                    Avx.Subtract(hX, Avx.Multiply(fX, v)),
-                    Avx.Add(eX, Avx.Multiply(gX, v))),
-                oobMask);
-
-            var negativeOne = Vector256.Create(-1f);
-            u = Avx.BlendVariable(u, negativeOne, wMask);
-            v = Avx.BlendVariable(v, negativeOne, wMask);
-        }
-
-        // Pick whether to use linear or quadratic version.
-        u = Avx.BlendVariable(u, rX, linearMask);
-        v = Avx.BlendVariable(v, rY, linearMask);
-
-        return (u, v);
+        return (u1, v1);
     }
 
     private static void CopyPixelsImpl(
