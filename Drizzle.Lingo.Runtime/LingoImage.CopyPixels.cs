@@ -123,7 +123,17 @@ public sealed unsafe partial class LingoImage
         dest.CopyIfShared();
         var srcBox = CalcSrcBox(source, sourceRect);
 
-        CopyPixelsQuadGenWriter(source, dest, destQuad, srcBox, parameters);
+        // Guard against edge case in InvBilinear when TopLeft equals TopRight
+        if (Vector2.DistanceSquared(destQuad.TopLeft, destQuad.TopRight) < 0.1f)
+        {
+            DestQuad correctedQuad = destQuad;
+            correctedQuad.TopRight += Vector2.Normalize(destQuad.BottomRight - destQuad.TopRight) * 0.25f;
+            CopyPixelsQuadGenWriter(source, dest, correctedQuad, srcBox, parameters);
+        }
+        else
+        {
+            CopyPixelsQuadGenWriter(source, dest, destQuad, srcBox, parameters);
+        }
     }
 
     private static void CopyPixelsQuadGenWriter(
@@ -343,6 +353,7 @@ public sealed unsafe partial class LingoImage
         static float Lerp(float x, float y, float a) => x + a * (y - x);
 
         // https://www.desmos.com/calculator/pkkdfmvfyw
+        // https://people.csail.mit.edu/bkph/articles/Quadratics.pdf
         static Vector2 InvBilinear(Vector2 p, Vector2 a, Vector2 k1, float k2, float k3, Vector2 k4, Vector2 k5)
         {
             float b = k3 - Cross2d(k1, p - a);
