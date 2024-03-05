@@ -201,8 +201,12 @@ public sealed partial class LevelRenderer
                         {
                             if (dcGet == Movie.gPEcolors[1][2])
                             {
-                                if (!DoesGreenValueMeanRainbow(greenCol))
+                                if (grimeActive
+                                    && (grimeOnGradients || greenCol is not 1 or 2 or 3)
+                                    && !DoesGreenValueMeanRainbow(greenCol))
+                                {
                                     greenCol += 4;
+                                }
                             }
                             else
                             {
@@ -211,6 +215,11 @@ public sealed partial class LevelRenderer
                                 {
                                     gDecalColors.add(dcGet);
                                     decalColor = (int) gDecalColors.count;
+                                }
+
+                                if (bkgFix && decalColor < 2)
+                                {
+                                    decalColor = 2;
                                 }
 
                                 col.BlueByte = (byte)(256 - decalColor);
