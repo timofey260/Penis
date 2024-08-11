@@ -814,7 +814,7 @@ internal static class Program
             //sb.Append('[');
             sb.Append(kExpr);
             //sb.Append("] = ");
-            sb.Append(": ");
+            sb.Append(" = ");
             sb.Append(vExpr); // todo
         }
 
