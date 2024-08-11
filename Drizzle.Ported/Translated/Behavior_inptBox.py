@@ -1,0 +1,1 @@
+from Drizzle.Runtime import *## Behavior script: inptBox#class inptBox(LingoBehaviorScript):     def __init__(self):         super().__init__()            def change(self):         _movieScript.levelName = _global.sprite(self.spritenum).text                return None            

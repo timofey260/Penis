@@ -1,0 +1,1 @@
+from Drizzle.Runtime import *## Behavior script: globals#class globals(LingoBehaviorScript):     def __init__(self):         super().__init__()            
