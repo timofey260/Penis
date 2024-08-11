@@ -1,5 +1,8 @@
-from abc import ABC
+from abc import ABC, abstractmethod
+from Drizzle.LingoGlobal import LingoGlobal
+
 
 class LingoScriptRuntimeBase(ABC):
-    def Init(self):
+    @abstractmethod
+    def Init(self, movieScript, glob: LingoGlobal):
         pass
