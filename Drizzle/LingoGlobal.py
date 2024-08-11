@@ -2,9 +2,13 @@ from __future__ import annotations
 from Drizzle.LingoRuntime import LingoRuntime
 from Drizzle.Data.LingoRect import LingoRect, LingoPoint, LingoNumber
 from Drizzle.Data.LingoSymbol import LingoSymbol
+from Drizzle.Data.LingoList import LingoList
+from Drizzle.Xtra.ImgXtra import ImgXtra, BaseXtra
+from Drizzle.Xtra.FileIOXtra import FileIOXtra
 import math
 import os
 from multipledispatch import dispatch
+from typing import Any
 
 
 class Global:
@@ -122,7 +126,7 @@ class LingoGlobal:
         return LingoNumber(1) if container.startswith(value) else LingoNumber(0)
 
     @staticmethod
-    @dispatch(..., ...)
+    @dispatch(Any, Any)
     def concat(a, b): return f"{a}{b}"
 
     @staticmethod
@@ -130,7 +134,7 @@ class LingoGlobal:
     def concat(a, b): return f"{a}{b}"
 
     @staticmethod
-    @dispatch(..., ..., ...)
+    @dispatch(Any, Any, Any)
     def concat(a, b, c): return f"{a}{b}{c}"
 
     @staticmethod
@@ -138,7 +142,7 @@ class LingoGlobal:
     def concat(a, b, c): return f"{a}{b}{c}"
 
     @staticmethod
-    @dispatch(list[...])
+    @dispatch(list[Any])
     def concat(items): return "".join(items)
 
     @staticmethod
@@ -146,7 +150,7 @@ class LingoGlobal:
     def concat(items): return "".join(items)
 
     @staticmethod
-    @dispatch(..., ...)
+    @dispatch(Any, Any)
     def concat_space(a, b): return f"{a} {b}"
 
     @staticmethod
@@ -154,7 +158,7 @@ class LingoGlobal:
     def concat_space(a, b): return f"{a} {b}"
 
     @staticmethod
-    @dispatch(..., ..., ...)
+    @dispatch(Any, Any, Any)
     def concat_space(a, b, c): return f"{a} {b} {c}"
 
     @staticmethod
@@ -162,7 +166,7 @@ class LingoGlobal:
     def concat_space(a, b, c): return f"{a} {b}, {c}"
 
     @staticmethod
-    @dispatch(list[...])
+    @dispatch(list[Any])
     def concat_space(a): return " ".join(a)
 
     def slice_helper(self, obj, start: LingoNumber, end: LingoNumber):
@@ -175,7 +179,7 @@ class LingoGlobal:
         raise NotImplementedError()
 
     def new_script(self, type: str, l: LingoList):
-        self.LingoRuntime.CreateScript(type, l)
+        return self.LingoRuntime.CreateScript(type, l)
 
     @staticmethod
     def thenumberof_helper(obj):
@@ -219,6 +223,47 @@ class LingoGlobal:
     def put(self, d):
         print(d)
 
+    def xtra(self, xtraNameOrNum):
+        xtraname = str(xtraNameOrNum)
+        xtraname = xtraname.lower()
+        return {"fileio": FileIOXtra(), "imgxtra": ImgXtra()}[xtraname]
+
+    def new(self, a):
+        if isinstance(a, BaseXtra):
+            return a.Duplicate()
+        raise NotImplementedError("you stupid")
+
+    def basetdisplay(self, w, h, idk3, idk, idk2):
+        raise NotImplementedError("wtf is this^^^")
+
+    def bascreeninfo(self, prop: str):
+        raise NotImplementedError("help me")
+
+    def getnthfilenameinfolder(self, folderPath: str, fileNumber: LingoNumber) -> str:
+        idx = int(fileNumber) - 1
+        entries = os.listdir(folderPath)
+        return "" if idx >= len(entries) else os.path.join(folderPath, entries[idx])
+
+    def script(self, a: str):
+        return self.LingoRuntime.CreateScript(a, LingoList())
+    
+    @property
+    def the_milliseconds(self):
+        return self._system.milliseconds
+
+    @property
+    def the_moviepath(self):
+        return self.the_moviePath
+
+    @property
+    def the_dirseparator(self):
+        return self.the_dirSeparator
+
+    def objectp(self, d): raise NotImplementedError("when would this end")
+
+    @dispatch()
+    def member(self, membernameornum, castnameornum=None):
+        return self.LingoRuntime.GetCastMember(membernameornum, castnameornum)
 
     @property
     def the_dirSeparator(self):

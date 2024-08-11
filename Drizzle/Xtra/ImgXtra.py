@@ -9,4 +9,5 @@ class ImgXtra(BaseXtra):
     def ix_saveimage(self, props: LingoPropertyList) -> int:
         img = props["image"]
         filename = props["filename"]
+        img.SaveAsPng(filename)
         return 1
