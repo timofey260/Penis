@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using Drizzle.Lingo.Runtime;
 using Drizzle.Lingo.Runtime.Parser;
 using Drizzle.Lingo.Runtime.Utils;
@@ -124,6 +125,55 @@ internal static class Program
         OutputBehaviorScripts(behaviorScripts, globalContext);
 
         OutputMovieGlobals(globalContext);
+
+
+        recompile_shit(movieScripts, globalContext, "Movie");
+        recompile_shit(parentScripts, globalContext, "Parent");
+        recompile_shit(behaviorScripts, globalContext, "Behavior");
+        recompile_globals(globalContext);
+    }
+
+    private static void recompile_globals(GlobalContext ctx)
+    {
+        var path = Path.Combine(ctx.SourcesDest, "Movie_globals.py");
+        var read = new StreamReader(path);
+        string text = read.ReadToEnd();
+        read.Close();
+
+        using var file = new StreamWriter(path);
+        file.Write(FixText(text));
+        file.Close();
+    }
+
+    private static void recompile_shit(IEnumerable<KeyValuePair<string, AstNode.Script>> scripts, GlobalContext ctx, string add)
+    {
+        foreach (var (name, script) in scripts.OrderBy(pair => pair.Key))
+        {
+            var path = Path.Combine(ctx.SourcesDest, add + $"_{name}.py");
+            var read = new StreamReader(path);
+            string text = read.ReadToEnd();
+            read.Close();
+
+            using var file = new StreamWriter(path);
+            file.Write(FixText(text));
+        }
+    }
+
+    private static string FixText(string text)
+    {
+        int indent = 0;
+        string newtext = "";
+        foreach (string line in text.Split('\n'))
+        {
+            string textindent = String.Concat(Enumerable.Repeat("    ", indent));
+            newtext += textindent + line.Replace("{", "").Replace("}", "").Replace("elifif", "elif").Replace("string", "str");
+            newtext = Regex.Replace(newtext, @"\)([a-zA-Z_])", $")\n{textindent}$1");
+            newtext = Regex.Replace(newtext, @"LingoSymbol\(""([a-zA-Z0-9]+)""\)", "$1");
+            newtext = Regex.Replace(newtext, @"""([a-zA-Z0-9]+)""=", "$1=");
+            if (line.Contains('{')) indent++;
+            else if (line.Contains('}')) indent--;
+        }
+        return newtext;
     }
 
     private static void OutputBehaviorScripts(
@@ -132,10 +182,11 @@ internal static class Program
     {
         foreach (var (name, script) in scripts.OrderBy(pair => pair.Key))
         {
-            var path = Path.Combine(ctx.SourcesDest, $"Behavior.{name}.cs");
+            var path = Path.Combine(ctx.SourcesDest, $"Behavior_{name}.py");
             using var file = new StreamWriter(path);
 
             OutputSingleBehaviorScript(name, script, file, ctx);
+            file.Close();
         }
     }
 
@@ -146,9 +197,9 @@ internal static class Program
         GlobalContext ctx)
     {
         WriteFileHeader(writer);
-        writer.WriteLine($"//\n// Behavior script: {name}\n//");
-        writer.WriteLine("[BehaviorScript]");
-        writer.WriteLine($"public sealed partial class {name} : LingoBehaviorScript {{");
+        writer.WriteLine($"#\n# Behavior script: {name}\n#");
+        //writer.WriteLine("[BehaviorScript]");
+        writer.WriteLine($"class {name}(LingoBehaviorScript): {{");
 
         EmitScriptBody(name, script, writer, ctx, isMovieScript: false);
 
@@ -162,10 +213,11 @@ internal static class Program
     {
         foreach (var (name, script) in scripts.OrderBy(pair => pair.Key))
         {
-            var path = Path.Combine(ctx.SourcesDest, $"Parent.{name}.cs");
+            var path = Path.Combine(ctx.SourcesDest, $"Parent_{name}.py");
             using var file = new StreamWriter(path);
 
             OutputSingleParentScript(name, script, file, ctx);
+            file.Close();
         }
     }
 
@@ -176,9 +228,9 @@ internal static class Program
         GlobalContext ctx)
     {
         WriteFileHeader(writer);
-        writer.WriteLine($"//\n// Parent script: {name}\n//");
-        writer.WriteLine("[ParentScript]");
-        writer.WriteLine($"public sealed partial class {name} : LingoParentScript {{");
+        writer.WriteLine($"#\n# Parent script: {name}\n#");
+        //writer.WriteLine("[ParentScript]");
+        writer.WriteLine($"class {name}(LingoParentScript): {{");
 
         EmitScriptBody(name, script, writer, ctx, isMovieScript: false);
 
@@ -188,21 +240,22 @@ internal static class Program
 
     private static void OutputMovieGlobals(GlobalContext ctx)
     {
-        var path = Path.Combine(ctx.SourcesDest, "Movie._globals.cs");
+        var path = Path.Combine(ctx.SourcesDest, "Movie_globals.py");
         using var file = new StreamWriter(path);
 
         WriteFileHeader(file);
         file.WriteLine();
-        file.WriteLine($"//\n// Movie globals\n//");
-        file.WriteLine("public sealed partial class MovieScript {");
+        file.WriteLine($"#\n# Movie globals\n#");
+        file.WriteLine("class MovieScript: {");
 
         foreach (var glob in ctx.AllGlobals)
         {
             var type = MapType(glob, ctx.GlobalTypes);
-            file.WriteLine($"[LingoGlobal] public {type} {glob};");
+            file.WriteLine($"{glob}: {type} = None");
         }
 
         file.WriteLine("}\n");
+        file.Close();
     }
 
     private static void OutputMovieScripts(
@@ -211,20 +264,25 @@ internal static class Program
     {
         foreach (var (name, script) in scripts.OrderBy(pair => pair.Key))
         {
-            var path = Path.Combine(ctx.SourcesDest, $"Movie.{name}.cs");
+            var path = Path.Combine(ctx.SourcesDest, $"Movie_{name}.py");
             Directory.CreateDirectory(ctx.SourcesDest);
             using var file = new StreamWriter(path);
 
             OutputSingleMovieScript(name, script, file, ctx);
+            file.Close();
         }
     }
 
     private static void WriteFileHeader(TextWriter writer)
     {
+        /*
         writer.WriteLine("using System;");
         writer.WriteLine("using Drizzle.Lingo.Runtime;");
         writer.WriteLine("using Drizzle.Lingo.Runtime.Cast;");
         writer.WriteLine($"namespace {OutputNamespace};");
+        */
+        // todo
+        writer.WriteLine("from Drizzle.Runtime import *");
     }
 
     private static void OutputSingleMovieScript(
@@ -234,8 +292,8 @@ internal static class Program
         GlobalContext ctx)
     {
         WriteFileHeader(writer);
-        writer.WriteLine($"//\n// Movie script: {name}\n//");
-        writer.WriteLine("public sealed partial class MovieScript {");
+        writer.WriteLine($"#\n# Movie script: {name}\n#");
+        writer.WriteLine("class MovieScript: {");
 
         EmitScriptBody(name, script, writer, ctx, isMovieScript: true);
 
@@ -263,12 +321,16 @@ internal static class Program
             ctx.GlobalTypes.Add(globalType.Name, globalType.Type);
         }
 
+        writer.WriteLine("def __init__(self): {");
+        writer.WriteLine("super().__init__()");
         var props = new HashSet<string>();
         foreach (var prop in script.Nodes.OfType<AstNode.Property>().SelectMany(p => p.Identifiers))
         {
             props.Add(prop);
-            writer.WriteLine($"[LingoProperty] public dynamic {prop};");
+            writer.WriteLine($"self.{prop} = None");
+            // todo
         }
+        writer.WriteLine("}");
 
         var quirks = Quirks.GetValueOrDefault(name);
 
@@ -279,7 +341,7 @@ internal static class Program
 
             // Have to write into a temporary buffer because we need to pre-declare all variables.
             var tempWriter = new StringWriter();
-            var handlerContext = new HandlerContext(scriptContext, handler.Name, tempWriter);
+            var handlerContext = new HandlerContext(scriptContext, handler.Name, tempWriter, props);
             handlerContext.Locals.UnionWith(handler.Parameters.Select(k => k.Name));
             handlerContext.Locals.UnionWith(props);
 
@@ -291,7 +353,7 @@ internal static class Program
             catch (Exception e)
             {
                 Console.WriteLine($"Failed to write handler {handler.Name}:\n{e}");
-                writer.WriteLine("throw new System.NotImplementedException(\"Compilation failed\");\n}");
+                writer.WriteLine("raise NotImplementedException(\"Compilation failed\")\n}");
                 continue;
             }
 
@@ -305,21 +367,23 @@ internal static class Program
             var paramsList = handler.Parameters.ToList();
             if (paramsList.Count > 0 && paramsList[0].Name == "me")
                 paramsList.RemoveAt(0);
+            paramsList.Insert(0, new("self", "me"));
 
-            var paramsText = string.Join(", ", paramsList.Select(p => $"{MapType(p.Name, types)} {p.Name.ToLower()} = default"));
+            var paramsText = string.Join(", ", paramsList.Select(p => $"{p.Name.ToLower()}"));
             var handlerLower = handler.Name.ToLower();
             var returnType = MapType("return", types);
-            writer.WriteLine($"public {returnType} {WriteSanitizeIdentifier(handlerLower)}({paramsText}) {{");
+            writer.WriteLine($"def {WriteSanitizeIdentifier(handlerLower)}({paramsText}): {{");
+
 
             foreach (var local in handlerContext.DeclaredLocals)
             {
-                writer.WriteLine($"{MapType(local, types)} {local.ToLower()} = default;");
+                writer.WriteLine($"{local.ToLower()} = None"); // todo
             }
 
             writer.WriteLine(tempWriter.GetStringBuilder());
 
             if (handler.Body.Statements.Length == 0 || handler.Body.Statements[^1] is not AstNode.Return)
-                writer.WriteLine("return default;");
+                writer.WriteLine("return None"); // todo
 
             // Handler end.
             writer.WriteLine("}");
@@ -328,6 +392,7 @@ internal static class Program
 
     private static void WriteStatementBlock(AstNode.StatementBlock node, HandlerContext ctx)
     {
+        if (node.Statements.Length == 0) ctx.Writer.WriteLine("pass");
         foreach (var statement in node.Statements)
         {
             WriteStatement(statement, ctx);
@@ -386,7 +451,6 @@ internal static class Program
 
                 var exprValue = WriteExpression(node, ctx);
                 ctx.Writer.Write(exprValue);
-                ctx.Writer.WriteLine(';');
                 break;
         }
     }
@@ -427,7 +491,7 @@ internal static class Program
 
         var coll = WriteExpression(node.Collection, ctx);
         var expr = WriteExpression(node.Expression, ctx);
-        ctx.Writer.WriteLine($"{coll} += {expr}.ToString();");
+        ctx.Writer.WriteLine($"{coll} += str({expr})");
     }
 
     private static void WriteIf(AstNode.If node, HandlerContext ctx)
@@ -436,8 +500,8 @@ internal static class Program
         var cond = WriteExpression(node.Condition, ctx, exprParams);
 
         ctx.Writer.WriteLine(exprParams.BoolGranted
-            ? $"if ({cond}) {{"
-            : $"if (LingoGlobal.ToBool({cond})) {{");
+            ? $"if {cond}: {{"
+            : $"if LingoGlobal.ToBool({cond}): {{");
 
         WriteStatementBlock(node.Statements, ctx);
         ctx.Writer.WriteLine('}');
@@ -446,7 +510,8 @@ internal static class Program
         {
             var elseIf = node.Else.Statements.Length == 1 && node.Else.Statements[0] is AstNode.If;
 
-            ctx.Writer.Write("else ");
+
+            ctx.Writer.Write(elseIf ? "elif" : "else:");
             // If the else clause is another if it's an else-if chain
             // and we forego the braces around the else.
             if (!elseIf)
@@ -463,7 +528,7 @@ internal static class Program
         var expr = WriteExpression(node.ListExpr, ctx);
         var name = node.Variable;
         var loopTmp = $"tmp_{name}";
-        ctx.Writer.WriteLine($"foreach (dynamic {loopTmp} in {expr}) {{");
+        ctx.Writer.WriteLine($"for {loopTmp} in {expr}: {{");
 
         MakeLoopTmp(ctx, name, loopTmp, number: false);
         WriteStatementBlock(node.Block, ctx);
@@ -478,12 +543,12 @@ internal static class Program
         var name = node.Variable;
         var loopTmp = $"tmp_{name}";
 
-        ctx.Writer.WriteLine($"for (int {loopTmp} = (int) ({start}); {loopTmp} <= {end}; {loopTmp}++) {{");
+        ctx.Writer.WriteLine($"for {loopTmp} in LingoGlobal.pyrange({start}, {end}): {{");
 
-        MakeLoopTmp(ctx, name, $"(LingoNumber){loopTmp}", number: true);
+        MakeLoopTmp(ctx, name, $"{loopTmp}", number: true); // todo
         WriteStatementBlock(node.Block, ctx);
 
-        ctx.Writer.WriteLine($"{loopTmp} = (int){WriteVariableNameCore(name, ctx)};");
+        ctx.Writer.WriteLine($"{loopTmp} = {WriteVariableNameCore(name, ctx)}");
         ctx.Writer.WriteLine("}");
 
         // ctx.LoopTempIdx--;
@@ -498,7 +563,7 @@ internal static class Program
                 MergeTypeSpec(ctx, name, "number");
         }
 
-        ctx.Writer.WriteLine($"{WriteVariableNameCore(name, ctx)} = {loopTmp};");
+        ctx.Writer.WriteLine($"{WriteVariableNameCore(name, ctx)} = {loopTmp}");
     }
 
     private static void WriteRepeatWhile(AstNode.RepeatWhile node, HandlerContext ctx)
@@ -507,8 +572,8 @@ internal static class Program
         var expr = WriteExpression(node.Condition, ctx);
 
         ctx.Writer.WriteLine(exprParams.BoolGranted
-            ? $"while ({expr}) {{"
-            : $"while (LingoGlobal.ToBool({expr})) {{");
+            ? $"while {expr}: {{"
+            : $"while LingoGlobal.ToBool({expr}): {{");
 
         WriteStatementBlock(node.Block, ctx);
 
@@ -526,28 +591,32 @@ internal static class Program
 
         if (literals)
         {
-            ctx.Writer.Write("switch (");
+            ctx.Writer.Write("match ");
+            /*
             if (allInts)
-                ctx.Writer.Write("(int?)");
+                ctx.Writer.Write("(int?)");*/
             ctx.Writer.Write(WriteExpression(node.Expression, ctx));
             // If this is a string switch, .ToLower() it and switch on lowercase values.
             // to avoid any case problems.
             if (node.Cases.Length > 0 && node.Cases[0].exprs[0] is AstNode.String)
-                ctx.Writer.Write(".ToString().ToLowerInvariant()");
+                ctx.Writer.Write(".lower()");
             else if (allInts)
             {
                 // Handle null int value in switch case.
                 // I'm gonna assume Joar never felt like using int.MaxValue anywhere.
-                ctx.Writer.Write("?? int.MaxValue");
+                ctx.Writer.Write(" if value is not None else 9999999999"); // todo
             }
 
-            ctx.Writer.WriteLine(") {");
+            ctx.Writer.WriteLine(": {");
 
-            foreach (var (exprs, block) in node.Cases)
+            foreach ((AstNode.Base[] exprs, AstNode.StatementBlock block) in node.Cases)
             {
+                bool first = true;
                 foreach (var expr in exprs)
                 {
-                    ctx.Writer.Write("case ");
+                    bool last = expr == exprs.Last();
+                    ctx.Writer.Write(first ? "case " : " | ");
+                    first = false;
                     if (expr is AstNode.String str)
                         ctx.Writer.Write(DoWriteString(str.Value.ToLowerInvariant()));
                     else if (expr is AstNode.Number num)
@@ -557,20 +626,22 @@ internal static class Program
                     }
                     else
                         ctx.Writer.Write(WriteExpression(expr, ctx));
-
-                    ctx.Writer.WriteLine(':');
+                    if (last)
+                        ctx.Writer.WriteLine(":{");
                 }
 
                 WriteStatementBlock(block, ctx);
 
-                ctx.Writer.WriteLine("break;");
+                //ctx.Writer.WriteLine("break");
+                ctx.Writer.WriteLine('}');
             }
 
             if (node.Otherwise != null)
             {
-                ctx.Writer.WriteLine("default:");
+                ctx.Writer.WriteLine("case _: {");
                 WriteStatementBlock(node.Otherwise, ctx);
-                ctx.Writer.WriteLine("break;");
+                //ctx.Writer.WriteLine("break");
+                ctx.Writer.WriteLine("}");
             }
 
             ctx.Writer.WriteLine("}");
@@ -586,7 +657,7 @@ internal static class Program
 
     private static void WriteExitRepeat(AstNode.ExitRepeat node, HandlerContext ctx)
     {
-        ctx.Writer.WriteLine("break;");
+        ctx.Writer.WriteLine("break");
     }
 
     private static void WriteReturn(AstNode.Return ret, HandlerContext ctx)
@@ -594,11 +665,11 @@ internal static class Program
         if (ret.Value != null)
         {
             var value = WriteExpression(ret.Value, ctx);
-            ctx.Writer.WriteLine($"return {value};");
+            ctx.Writer.WriteLine($"return {value}");
         }
         else
         {
-            ctx.Writer.WriteLine($"return default;");
+            ctx.Writer.WriteLine($"return None"); // todo
         }
     }
 
@@ -629,8 +700,7 @@ internal static class Program
 
         var lhs = WriteExpression(node.Assigned, ctx);
         var rhs = WriteExpression(node.Value, ctx);
-
-        ctx.Writer.WriteLine($"{lhs} = {rhs};");
+        ctx.Writer.WriteLine($"{lhs} = {rhs}");
     }
 
     private static string WriteExpression(AstNode.Base node, HandlerContext ctx, ExpressionParams? param = null)
@@ -728,10 +798,10 @@ internal static class Program
     private static string WritePropertyList(AstNode.PropertyList node, HandlerContext ctx)
     {
         if (node.Values.Length == 0)
-            return "new LingoPropertyList()";
+            return "LingoPropertyList()";
 
         var sb = new StringBuilder();
-        sb.Append("new LingoPropertyList {");
+        sb.Append("LingoPropertyList("); // todo
         var first = true;
         foreach (var (k, v) in node.Values)
         {
@@ -741,13 +811,14 @@ internal static class Program
             first = false;
             var kExpr = WriteExpression(k, ctx);
             var vExpr = WriteExpression(v, ctx);
-            sb.Append('[');
+            //sb.Append('[');
             sb.Append(kExpr);
-            sb.Append("] = ");
-            sb.Append(vExpr);
+            //sb.Append("] = ");
+            sb.Append("=");
+            sb.Append(vExpr); // todo
         }
 
-        sb.Append("}");
+        sb.Append(")");
 
         return sb.ToString();
     }
@@ -762,7 +833,7 @@ internal static class Program
         var lowered = name.ToLower();
 
         if (lowered == "me")
-            return "this";
+            return "self";
 
         if (ctx.Locals.Contains(lowered))
             return lowered;
@@ -807,12 +878,12 @@ internal static class Program
                 sb.Append(')');
             }
 
-            sb.Insert(0, '!');
+            sb.Insert(0, "not ");
 
             if (exprParams is not { WantBool: true })
             {
-                sb.Insert(0, '(');
-                sb.Append(" ? 1 : 0)");
+                sb.Insert(0, "(1 if ");
+                sb.Append(" else 0)");
             }
             else
             {
@@ -833,7 +904,7 @@ internal static class Program
 
     private static string WriteSymbol(AstNode.Symbol node, HandlerContext ctx)
     {
-        return $"new LingoSymbol(\"{node.Value}\")";
+        return node.Value;
     }
 
     private static string WriteString(AstNode.String node, HandlerContext ctx)
@@ -844,7 +915,7 @@ internal static class Program
     private static string DoWriteString(string str)
     {
         var escaped = str.Replace("\"", "\"\"");
-        return $"@\"{escaped}\"";
+        return $"\"{escaped}\""; // todo
     }
 
     private static string WriteNewScript(AstNode.NewScript node, HandlerContext ctx)
@@ -873,14 +944,16 @@ internal static class Program
             return WriteGlobalCall("lengthmember_helper", ctx, node.Expression);
 
         var child = WriteExpression(node.Expression, ctx);
-        return $"{child}.{WriteSanitizeIdentifier(node.Property.ToLower())}";
+        string thing = ctx.Properties.Contains(child) ? "self." : "";
+        return $"{thing}{child}.{WriteSanitizeIdentifier(node.Property.ToLower())}";
     }
 
     private static string WriteMemberIndex(AstNode.MemberIndex node, HandlerContext ctx)
     {
         var child = WriteExpression(node.Expression, ctx);
         var idx = WriteExpression(node.Index, ctx);
-        return $"{child}[{idx}]";
+        string thing = ctx.Properties.Contains(child) ? "self." : "";
+        return $"{thing}{child}[{idx}]";
     }
 
     private static string WriteMemberCall(AstNode.MemberCall node, HandlerContext ctx)
@@ -888,31 +961,32 @@ internal static class Program
         var child = WriteExpression(node.Expression, ctx);
         var args = node.Parameters.Select(v => WriteExpression(v, ctx));
         var name = WriteSanitizeIdentifier(node.Name.ToLower());
-        return $"{child}.{name}({string.Join(',', args)})";
+        string thing = ctx.Properties.Contains(child) ? "self." : "";
+        return $"{thing}{child}.{name}({string.Join(',', args)})";
     }
 
     private static string WriteList(AstNode.List node, HandlerContext ctx)
     {
         if (node.Values.Length == 0)
-            return "new LingoList()";
+            return "LingoList()";
 
         var args = node.Values.Select(v => WriteExpression(v, ctx));
-        return $"new LingoList {{ {string.Join(',', args)} }}";
+        return $"LingoList({string.Join(',', args)})";
     }
 
     private static string MovieScriptPrefix(HandlerContext ctx)
     {
-        return ctx.Parent.IsMovieScript ? "this." : "_movieScript.";
+        return ctx.Parent.IsMovieScript ? "self." : "_movieScript.";
     }
 
     private static string WriteNumber(AstNode.Number node, HandlerContext ctx)
     {
-        return $"new LingoNumber({node.Value})";
+        return $"LingoNumber({node.Value})";
     }
 
     private static string WriteConstant(AstNode.Constant node, HandlerContext ctx)
     {
-        if (node.Name.Equals("void", StringComparison.InvariantCultureIgnoreCase))
+        if (node.Name.Equals("None", StringComparison.InvariantCultureIgnoreCase))
             return "null";
 
         return $"LingoGlobal.{node.Name.ToUpper()}";
@@ -1006,10 +1080,10 @@ internal static class Program
 
         var op = node.Type switch
         {
-            AstNode.BinaryOperatorType.And => "&",
-            AstNode.BinaryOperatorType.Or => "|",
-            AstNode.BinaryOperatorType.Sand => "&&",
-            AstNode.BinaryOperatorType.Sor => "||",
+            AstNode.BinaryOperatorType.And => "and",
+            AstNode.BinaryOperatorType.Or => "or",
+            AstNode.BinaryOperatorType.Sand => "and",
+            AstNode.BinaryOperatorType.Sor => "or",
             _ => throw new ArgumentOutOfRangeException()
         };
 
@@ -1025,7 +1099,7 @@ internal static class Program
         if (ctx.Parent.AllHandlers.Contains(lower))
         {
             // Local call
-            return $"this.{lower}({string.Join(',', args)})";
+            return $"self.{lower}({string.Join(',', args)})";
         }
 
         if (ctx.Parent.Parent.MovieHandlers.Contains(node.Name))
@@ -1063,18 +1137,18 @@ internal static class Program
     private static readonly HashSet<string> CSharpKeyWords = new HashSet<string>
     {
         "new",
-        "string",
+        "str",
         "float"
     };
 
     private static string WriteSanitizeIdentifier(string identifier)
     {
-        return CSharpKeyWords.Contains(identifier) ? $"@{identifier}" : identifier;
+        return CSharpKeyWords.Contains(identifier) ? $"{identifier}" : identifier; // todo
     }
 
     private static string MapType(string variable, Dictionary<string, string> types)
     {
-        var type = types.GetValueOrDefault(variable, "dynamic");
+        var type = types.GetValueOrDefault(variable, "...");
         return TypeKeywords.GetValueOrDefault(type, type);
     }
 
@@ -1099,6 +1173,7 @@ internal static class Program
         public HashSet<string> AllHandlers { get; }
         public bool IsMovieScript { get; }
 
+
         public ScriptContext(
             GlobalContext parent,
             HashSet<string> allGlobals,
@@ -1114,13 +1189,14 @@ internal static class Program
 
     private sealed class HandlerContext
     {
-        public HandlerContext(ScriptContext parent, string name, TextWriter writer)
+        public HandlerContext(ScriptContext parent, string name, TextWriter writer, HashSet<string> props)
         {
             Parent = parent;
             Name = name;
             Writer = writer;
+            Properties = props;
         }
-
+        public HashSet<string> Properties { get; } = new(StringComparer.InvariantCultureIgnoreCase);
         public HashSet<string> Globals { get; } = new(StringComparer.InvariantCultureIgnoreCase);
         public HashSet<string> Locals { get; } = new(StringComparer.InvariantCultureIgnoreCase);
         public HashSet<string> DeclaredLocals { get; } = new(StringComparer.InvariantCultureIgnoreCase);
