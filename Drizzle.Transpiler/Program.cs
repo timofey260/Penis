@@ -168,7 +168,7 @@ internal static class Program
             string textindent = String.Concat(Enumerable.Repeat("    ", indent));
             newtext += textindent + line.Replace("{", "").Replace("}", "").Replace("elifif", "elif").Replace("string", "str");
             newtext = Regex.Replace(newtext, @"\)([a-zA-Z_])", $")\n{textindent}$1");
-            newtext = Regex.Replace(newtext, @"LingoSymbol\(""([a-zA-Z0-9]+)""\)", "$1");
+            //newtext = Regex.Replace(newtext, @"LingoSymbol\(""([a-zA-Z0-9]+)""\)", "$1");
             newtext = Regex.Replace(newtext, @"""([a-zA-Z0-9]+)""=", "$1=");
             if (line.Contains('{')) indent++;
             else if (line.Contains('}')) indent--;
