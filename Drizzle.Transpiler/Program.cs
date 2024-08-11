@@ -801,7 +801,7 @@ internal static class Program
             return "LingoPropertyList()";
 
         var sb = new StringBuilder();
-        sb.Append("LingoPropertyList("); // todo
+        sb.Append("LingoPropertyList(dict("); // todo
         var first = true;
         foreach (var (k, v) in node.Values)
         {
@@ -814,11 +814,11 @@ internal static class Program
             //sb.Append('[');
             sb.Append(kExpr);
             //sb.Append("] = ");
-            sb.Append("=");
+            sb.Append(": ");
             sb.Append(vExpr); // todo
         }
 
-        sb.Append(")");
+        sb.Append("))");
 
         return sb.ToString();
     }
@@ -904,7 +904,7 @@ internal static class Program
 
     private static string WriteSymbol(AstNode.Symbol node, HandlerContext ctx)
     {
-        return node.Value;
+        return $"LingoSymbol(\"{node.Value}\")";
     }
 
     private static string WriteString(AstNode.String node, HandlerContext ctx)

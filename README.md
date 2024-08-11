@@ -11,10 +11,13 @@ To run drizzle, you currently need to:
 
 ## Project structure
 
+bold == useless
+
 The project is organized as such:
-* `Drizzle.Lingo.Runtime`: Includes core logic necessary to run Lingo code required by RWLE.
+* **`Drizzle.Lingo.Runtime`: Includes core logic necessary to run Lingo code required by RWLE.**
+* `Drizzle.Runtime`: includes pyhton implementation of `Drizzle.Lingo.Runtime`
 * `Drizzle.Transpiler`: Transpiles Lingo into extremely messy, `dynamic` heavy C#. Requires `Drizzle.Lingo.Runtime` to parse Lingo.
 * `Drizzle.Ported`: Contains transpiled C# code output by `Drizzle.Transpiler`.
-* `Drizzle.Logic`: Contains C# logic shared between console app and GUI renderer, interfacing with the transpiled code.
-* `Drizzle.ConsoleApp`: Console application for headless renders.
-* `Drizzle.Editor`: GUI editor using Avalonia.
+* **`Drizzle.Logic`: Contains C# logic shared between console app and GUI renderer, interfacing with the transpiled code.**
+* **`Drizzle.ConsoleApp`: Console application for headless renders.**
+* **`Drizzle.Editor`: GUI editor using Avalonia.***
