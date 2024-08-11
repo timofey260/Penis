@@ -101,13 +101,14 @@ class LingoGlobal:
         self.BACKSPACE = "\x08"
         self.EMPTY = ""
         self.ENTER = "\x03"
-        self.TRUE = LingoNumber(1)
-        self.FALSE = LingoNumber(0)
-        self.PI = LingoNumber(math.pi)
         self.QUOTE = "\""
         self.RETURN = "\r"
         self.SPACE = " "
         self.VOID = None
+
+    TRUE = LingoNumber(1)
+    FALSE = LingoNumber(0)
+    PI = LingoNumber(math.pi)
 
     @staticmethod
     def abs(value: LingoNumber) -> LingoNumber:
