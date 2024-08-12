@@ -6,17 +6,17 @@ class LingoNumber:
     def __init__(self, value: int | float | None=None):
         if value is None:
             value = 0
-        self.isDecimal = isinstance(value, float)
-        self._intValue = 0 if self.isDecimal else value
-        self._decimalValue = 0 if not self.isDecimal else value
+        self.IsDecimal = isinstance(value, float)
+        self._intValue = 0 if self.IsDecimal else value
+        self._decimalValue = 0 if not self.IsDecimal else value
 
     @property
     def DecimalValue(self) -> float:
-        return self._decimalValue if self.isDecimal else self._intValue
+        return self._decimalValue if self.IsDecimal else self._intValue
 
     @property
     def IntValue(self) -> int:
-        return round(self._decimalValue) if self.isDecimal else self._intValue
+        return round(self._decimalValue) if self.IsDecimal else self._intValue
 
     @property
     def integer(self):
@@ -39,7 +39,7 @@ class LingoNumber:
 
     @staticmethod
     def Abs(number: LingoNumber):
-        if number.isDecimal:
+        if number.IsDecimal:
             return LingoNumber(abs(number._decimalValue))
         return LingoNumber(abs(number._intValue))
 
@@ -68,28 +68,28 @@ class LingoNumber:
         return LingoNumber(math.pow(base.DecimalValue, exp.DecimalValue))
 
     def __str__(self) -> str:
-        return str(self.DecimalValue) if self.isDecimal else str(self.IntValue)
+        return str(self.DecimalValue) if self.IsDecimal else str(self.IntValue)
 
     def __neg__(self) -> LingoNumber:
-        return LingoNumber(-self.DecimalValue if self.isDecimal else -self.IntValue)
+        return LingoNumber(-self.DecimalValue if self.IsDecimal else -self.IntValue)
 
     def __pos__(self) -> LingoNumber:
-        return LingoNumber(+self.DecimalValue if self.isDecimal else +self.IntValue)
+        return LingoNumber(+self.DecimalValue if self.IsDecimal else +self.IntValue)
 
     def __add__(self, other: LingoNumber) -> LingoNumber:
-        return LingoNumber((self.DecimalValue + other.DecimalValue) if self.isDecimal and other.isDecimal else (self.IntValue + other.IntValue))
+        return LingoNumber((self.DecimalValue + other.DecimalValue) if self.IsDecimal and other.IsDecimal else (self.IntValue + other.IntValue))
 
     def __sub__(self, other: LingoNumber) -> LingoNumber:
-        return LingoNumber((self.DecimalValue - other.DecimalValue) if self.isDecimal and other.isDecimal else (self.IntValue - other.IntValue))
+        return LingoNumber((self.DecimalValue - other.DecimalValue) if self.IsDecimal and other.IsDecimal else (self.IntValue - other.IntValue))
 
     def __mul__(self, other: LingoNumber) -> LingoNumber:
-        return LingoNumber((self.DecimalValue * other.DecimalValue) if self.isDecimal and other.isDecimal else (self.IntValue * other.IntValue))
+        return LingoNumber((self.DecimalValue * other.DecimalValue) if self.IsDecimal and other.IsDecimal else (self.IntValue * other.IntValue))
 
     def __truediv__(self, other: LingoNumber) -> LingoNumber:
-        return LingoNumber((self.DecimalValue / other.DecimalValue) if self.isDecimal and other.isDecimal else (self.IntValue / other.IntValue))
+        return LingoNumber((self.DecimalValue / other.DecimalValue) if self.IsDecimal and other.IsDecimal else (self.IntValue / other.IntValue))
 
     def __mod__(self, other: LingoNumber) -> LingoNumber:
-        return LingoNumber((self.DecimalValue % other.DecimalValue) if self.isDecimal and other.isDecimal else (self.IntValue % other.IntValue))
+        return LingoNumber((self.DecimalValue % other.DecimalValue) if self.IsDecimal and other.IsDecimal else (self.IntValue % other.IntValue))
 
     def __int__(self) -> int:
         return self.IntValue

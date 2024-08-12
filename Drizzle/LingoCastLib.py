@@ -1,4 +1,7 @@
-from Drizzle.LingoRuntime import LingoRuntime
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from Drizzle.LingoRuntime import LingoRuntime
 from Drizzle.Cast.CastMember import CastMember
 from Drizzle.Data.LingoNumber import LingoNumber
 from multipledispatch import dispatch

@@ -1,5 +1,8 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from Drizzle.LingoScriptRuntimeBase import LingoScriptRuntimeBase
-from Drizzle.MovieScript import MovieScript
+if TYPE_CHECKING:
+    from Drizzle.MovieScript import MovieScript
 from Drizzle.LingoGlobal import LingoGlobal
 from multipledispatch import dispatch
 from typing import Any

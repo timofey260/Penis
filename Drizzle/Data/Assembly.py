@@ -1,2 +1,3 @@
 class Assembly:
-    pass
+    def GetTypes(self) -> list[type]:
+        return

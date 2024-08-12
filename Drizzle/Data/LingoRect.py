@@ -33,6 +33,9 @@ class LingoRect:
             return [self.left, self.top, self.right, self.bottom][item.IntValue]
         return [self.left, self.top, self.right, self.bottom][item]
 
+    def __len__(self):
+        return 4
+
     def __add__(self, other):
         if isinstance(other, LingoRect):
             return LingoRect(self.left + other.left, self.top + other.top,

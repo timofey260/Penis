@@ -1,8 +1,6 @@
 from __future__ import annotations
-
 import os.path
 import re
-from Drizzle.MovieScript import MovieScript
 from Drizzle.LingoParentScript import LingoParentScript
 from Drizzle.LingoBehaviorScript import LingoBehaviorScript
 from Drizzle.LingoScriptRuntimeBase import LingoScriptRuntimeBase
@@ -16,8 +14,9 @@ from multipledispatch import dispatch
 from typing import Any
 from Drizzle.Data.Stopwatch import Stopwatch
 from Drizzle.Data.Assembly import Assembly
+from copy import deepcopy
 
-AssemblyLocation = ""  # todo
+AssemblyLocation = os.path.join(__file__, "..", "..", "..")  # todo
 
 
 class RngState:
@@ -27,7 +26,6 @@ class RngState:
 
 
 class LingoRuntime:
-
     @dispatch(Assembly)
     def __init__(self, assembly: Assembly):
         self._assembly = assembly
@@ -36,6 +34,7 @@ class LingoRuntime:
 
     @dispatch()
     def __init__(self):
+        from Drizzle.MovieScript import MovieScript
         path = os.path.join(AssemblyLocation, "Data")
         self.MovieBasePath = path
         self.CastPath = os.path.join(self.MovieBasePath, "Cast")
@@ -46,7 +45,7 @@ class LingoRuntime:
         self.RngSeed = 0
         self.MovieBasePath = ""
         self.CastPath = os.path.join(self.MovieBasePath, "Cast")
-        self.MovieScriptInstance = None
+        self.MovieScriptInstance: MovieScript | None = None
         self._behaviorScripts: dict[str, type] = {}
         self._parentScripts: dict[str, type] = {}
 
@@ -92,8 +91,8 @@ class LingoRuntime:
             if self._castMemberNameIndexDirty:
                 self.UpdateMemberNameIndex()
 
-            mem = self._castMemberNameIndex.get(nameOrNum, False)
-            if mem:
+            mem = self._castMemberNameIndex.get(nameOrNum)
+            if mem is not None:
                 return mem
 
         for castLib in self._castLibs:
@@ -247,6 +246,7 @@ class LingoRuntime:
         self.InitScript()
 
     def InitScript(self):
+        from Drizzle.MovieScript import MovieScript
         movieScriptType: type = None
         parentScripts: list[type] = []
         behaviorScripts: list[type] = []
@@ -348,7 +348,7 @@ class LingoRuntime:
         print("cloning Globals")
         srcMovieScript = src.MovieScriptInstance
         dstMovieScript = dst.MovieScriptInstance
-        for field in srcMovieScript.
+        dstMovieScript._global = deepcopy(srcMovieScript._global)
 
-
-
+    def DeepClone(self):
+        raise NotImplementedError("welp")

@@ -12,6 +12,9 @@ class LingoPropertyList:
     def __init__(self, d: dict):
         self.Dict = d
 
+    def __len__(self):
+        return len(self.Dict)
+
     def __getitem__(self, item):
         # if isinstance(item, LingoNumber):
         #     item = item.IntValue

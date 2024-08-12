@@ -25,6 +25,9 @@ class LingoPoint:
             return [self.loch, self.locv][item.IntValue]
         return [self.loch, self.locv][item]
 
+    def __len__(self):
+        return 2
+
     def asPoint(self) -> QPointF:
         return QPointF(self.locv.DecimalValue, self.loch.DecimalValue)
 

@@ -1,11 +1,15 @@
 from __future__ import annotations
-from Drizzle.LingoRuntime import LingoRuntime
-from Drizzle.LingoCastLib import LingoCastLib
-from Drizzle.Data.LingoSymbol import LingoSymbol
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from Drizzle.LingoRuntime import LingoRuntime
+    from Drizzle.LingoCastLib import LingoCastLib
 from Drizzle.Data.LingoImage import LingoImage
-from Drizzle.Data.LingoPoint import LingoPoint, LingoNumber
+from Drizzle.Data.LingoRect import LingoRect, LingoNumber
+from Drizzle.Data.LingoSymbol import LingoSymbol
 from Drizzle.Data.LingoPropertyList import LingoPropertyList
+from Drizzle.Data.LingoColor import LingoColor
 from enum import Enum, auto
+from multipledispatch import dispatch
 import os
 
 
@@ -28,7 +32,7 @@ class CastMember:
         self._text = ""
         self._name = None
         self.alignment = LingoSymbol("")
-        self._image = None
+        self._image: LingoImage = None
         self.regpoint = None
         self._lineDirection = None
         self.Type: CastMemberType = CastMemberType.Empty
@@ -81,7 +85,7 @@ class CastMember:
             case CastMemberType.Bitmap:
                 self.ImportFileImplBitmap(fullPath)
             case CastMemberType.Text:
-                self.IMportFileImplText(fullPath)
+                self.ImportFileImplText(fullPath)
 
     def AssertType(self, type: CastMemberType):
         assert self.Type != type, "This guy stinks"
@@ -95,3 +99,73 @@ class CastMember:
                 self._image = other._image.DuplicateShared()
             case CastMemberType.Text:
                 self._text = other._text
+
+    @property
+    def image(self):
+        self.AssertType(CastMemberType.Bitmap)
+        return self._image
+
+    @image.setter
+    def image(self, value):
+        self.AssertType(CastMemberType.Bitmap)
+        self._image = value
+
+    @property
+    def rect(self) -> LingoRect:
+        self.AssertType(CastMemberType.Bitmap)
+        return self._image.rect
+
+    @property
+    def width(self) -> LingoNumber:
+        self.AssertType(CastMemberType.Bitmap)
+        return self.image.width
+
+    @property
+    def height(self) -> LingoNumber:
+        self.AssertType(CastMemberType.Bitmap)
+        return self.image.height
+
+    @dispatch(int, int)
+    def getpixel(self, x: int, y: int) -> LingoColor:
+        self.AssertType(CastMemberType.Bitmap)
+        return self.image.getpixel(x, y)
+
+    @dispatch(LingoNumber, LingoNumber)
+    def getpixel(self, x: LingoNumber, y: LingoNumber):
+        return self.getpixel(int(x), int(y))
+
+    def ImportFileImplBitmap(self, path: str):
+        self.image = LingoImage.LoadFromPath(path).Trimmed()
+
+    @property
+    def linedirection(self):
+        self.AssertType(CastMemberType.Shape)
+        return self._lineDirection
+
+    @linedirection.setter
+    def linedirection(self, value):
+        self.AssertType(CastMemberType.Shape)
+        self._lineDirection = value
+
+    @property
+    def text(self):
+        self.AssertType(CastMemberType.Text)
+        return self._text
+
+    @text.setter
+    def text(self, value):
+        self.AssertType(CastMemberType.Text)
+        self._text = value
+
+    def ImportFileImplText(self, path: str):
+        try:
+            with open(path) as sr:
+                self.text = "\r".join(sr.readlines())
+
+        except FileNotFoundError:
+            self.text = ""
+
+        except NotADirectoryError:
+            self.text = ""
+
+
