@@ -166,9 +166,9 @@ internal static class Program
         foreach (string line in text.Split('\n'))
         {
             string textindent = String.Concat(Enumerable.Repeat("    ", indent));
-            newtext += textindent + line.Replace("{", "").Replace("}", "").Replace("elifif", "elif").Replace("string", "str");
+            newtext += textindent + line.Replace("{", "").Replace("}", "").Replace("elifif", "elif").Replace("string", "str").Replace("_global", "self._global").Replace("_movieScript", "self._movieScript");
             newtext = Regex.Replace(newtext, @"\)([a-zA-Z_])", $")\n{textindent}$1");
-            //newtext = Regex.Replace(newtext, @"LingoSymbol\(""([a-zA-Z0-9]+)""\)", "$1");
+            newtext = Regex.Replace(newtext, @"LingoSymbol\(""([a-zA-Z0-9]+)""\)", "$1");
             newtext = Regex.Replace(newtext, @"""([a-zA-Z0-9]+)""=", "$1=");
             if (line.Contains('{')) indent++;
             else if (line.Contains('}')) indent--;
@@ -543,12 +543,14 @@ internal static class Program
         var name = node.Variable;
         var loopTmp = $"tmp_{name}";
 
-        ctx.Writer.WriteLine($"for {loopTmp} in LingoGlobal.pyrange({start}, {end}): {{");
+        ctx.Writer.WriteLine($"{loopTmp}=int({start})");
+        ctx.Writer.WriteLine($"while {loopTmp} < {end}: {{");
 
         MakeLoopTmp(ctx, name, $"{loopTmp}", number: true); // todo
         WriteStatementBlock(node.Block, ctx);
 
         ctx.Writer.WriteLine($"{loopTmp} = {WriteVariableNameCore(name, ctx)}");
+        ctx.Writer.WriteLine($"{loopTmp} += 1");
         ctx.Writer.WriteLine("}");
 
         // ctx.LoopTempIdx--;
