@@ -1,4 +1,4 @@
-# Drizzle, a Rain World level editor
+# Penis, a Rain World drizzle based renderer
 
 Drizzle is a port and gradual rewrite of the official Rain World level editor (RWLE). Primary goals are to **make renders faster** and to **have a better interface**.
 

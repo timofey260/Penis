@@ -25,6 +25,9 @@ class MovieScript(LingoScriptBase):
         member.name = "previewImprt"
         return member.image
 
+    def ImageCacheClear(self):
+        self._imageCache.Clear()
+
 
 class MovieScriptExt:
     @staticmethod
