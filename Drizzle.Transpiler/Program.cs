@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Drizzle.Lingo.Runtime;
 using Drizzle.Lingo.Runtime.Parser;
 using Drizzle.Lingo.Runtime.Utils;
@@ -127,10 +128,10 @@ internal static class Program
         OutputMovieGlobals(globalContext);
 
 
-        recompile_shit(movieScripts, globalContext, "Movie");
+        //recompile_shit(movieScripts, globalContext, "Movie");
         recompile_shit(parentScripts, globalContext, "Parent");
         recompile_shit(behaviorScripts, globalContext, "Behavior");
-        recompile_globals(globalContext);
+        //recompile_globals(globalContext);
     }
 
     private static void recompile_globals(GlobalContext ctx)
@@ -170,6 +171,7 @@ internal static class Program
             newtext = Regex.Replace(newtext, @"\)([a-zA-Z_])", $")\n{textindent}$1");
             //newtext = Regex.Replace(newtext, @"LingoSymbol\(""([a-zA-Z0-9]+)""\)", "$1");
             newtext = Regex.Replace(newtext, @"""([a-zA-Z0-9]+)""=", "$1=");
+            newtext = Regex.Replace(newtext, @"\bdel\b", "tempdel");
             if (line.Contains('{')) indent++;
             else if (line.Contains('}')) indent--;
         }
@@ -240,37 +242,77 @@ internal static class Program
 
     private static void OutputMovieGlobals(GlobalContext ctx)
     {
-        var path = Path.Combine(ctx.SourcesDest, "Movie_globals.py");
-        using var file = new StreamWriter(path);
+        var path = Path.Combine(ctx.SourcesDest, "MovieScript.py");
+        using var file = new StreamWriter(path, true);
 
+        /*
         WriteFileHeader(file);
         file.WriteLine();
         file.WriteLine($"#\n# Movie globals\n#");
-        file.WriteLine("class MovieScript: {");
+        file.WriteLine("class MovieScript: {");*/
 
         foreach (var glob in ctx.AllGlobals)
         {
             var type = MapType(glob, ctx.GlobalTypes);
             file.WriteLine($"{glob}: {type} = None");
         }
-
+        
         file.WriteLine("}\n");
         file.Close();
+        
+        var read = new StreamReader(path);
+        string text = read.ReadToEnd();
+        read.Close();
+
+        using var file1 = new StreamWriter(path);
+        file1.Write(FixText(text));
+        file1.WriteLine("""
+                @dispatch(LingoGlobal)
+                def Init(self, glob: LingoGlobal):
+                    super().Init(self, glob)
+
+                def __init__(self):
+                    self._imageCache = LruCache(64)
+
+                def cacheloadimage(self, fileName: str):
+                    return self._imageCache.Get(fileName, self, lambda state, fileName: state.CacheLoadImageLoad(fileName))
+
+                def CacheLoadImageLoad(self, fileName: str):
+                    member = self._global.member("previewImprt")
+                    member.importfileinto(fileName)
+                    member.name = "previewImprt"
+                    return member.image
+
+                def ImageCacheClear(self):
+                    self._imageCache.Clear()
+
+
+            class MovieScriptExt:
+                @staticmethod
+                def MovieScript(runtime: LingoRuntime):
+                    return runtime.MovieScriptInstance
+            """); // just to be sure
     }
 
     private static void OutputMovieScripts(
         IEnumerable<KeyValuePair<string, AstNode.Script>> scripts,
         GlobalContext ctx)
     {
+        var path = Path.Combine(ctx.SourcesDest, $"MovieScript.py");
+        Directory.CreateDirectory(ctx.SourcesDest);
+        using var file = new StreamWriter(path);
+
+        WriteFileHeader(file);
+        file.WriteLine("from multipledispatch import dispatch");
+        file.WriteLine($"#\n# Movie script\n#");
+        file.WriteLine("class MovieScript(LingoScriptBase): {");
+
         foreach (var (name, script) in scripts.OrderBy(pair => pair.Key))
         {
-            var path = Path.Combine(ctx.SourcesDest, $"Movie_{name}.py");
-            Directory.CreateDirectory(ctx.SourcesDest);
-            using var file = new StreamWriter(path);
-
             OutputSingleMovieScript(name, script, file, ctx);
-            file.Close();
         }
+        //file.Write("}\n");
+        file.Close();
     }
 
     private static void WriteFileHeader(TextWriter writer)
@@ -291,14 +333,8 @@ internal static class Program
         TextWriter writer,
         GlobalContext ctx)
     {
-        WriteFileHeader(writer);
-        writer.WriteLine($"#\n# Movie script: {name}\n#");
-        writer.WriteLine("class MovieScript: {");
-
         EmitScriptBody(name, script, writer, ctx, isMovieScript: true);
 
-        // End class and namespace.
-        writer.WriteLine("}\n");
     }
 
     private static void EmitScriptBody(
@@ -320,17 +356,22 @@ internal static class Program
         {
             ctx.GlobalTypes.Add(globalType.Name, globalType.Type);
         }
-
-        writer.WriteLine("def __init__(self): {");
-        writer.WriteLine("super().__init__()");
+        if (!isMovieScript)
+        {
+            writer.WriteLine("def __init__(self): {");
+            writer.WriteLine("super().__init__()");
+        }
+        
         var props = new HashSet<string>();
         foreach (var prop in script.Nodes.OfType<AstNode.Property>().SelectMany(p => p.Identifiers))
         {
             props.Add(prop);
-            writer.WriteLine($"self.{prop} = None");
+            if (!isMovieScript)
+                writer.WriteLine($"self.{prop} = None");
             // todo
         }
-        writer.WriteLine("}");
+        if (!isMovieScript)
+            writer.WriteLine("}");
 
         var quirks = Quirks.GetValueOrDefault(name);
 
