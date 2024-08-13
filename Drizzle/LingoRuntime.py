@@ -11,12 +11,11 @@ from Drizzle.LingoGlobal import LingoGlobal
 from Drizzle.Data.Stopwatch import Stopwatch
 from Drizzle.Data.LingoList import LingoList
 from multipledispatch import dispatch
-from typing import Any
 from Drizzle.Data.Stopwatch import Stopwatch
 from Drizzle.Data.Assembly import Assembly
 from copy import deepcopy
 
-AssemblyLocation = os.path.join(__file__, "..", "..", "..")  # todo
+AssemblyLocation = os.path.dirname(os.path.dirname(__file__))  # todo
 
 
 class RngState:
@@ -44,7 +43,6 @@ class LingoRuntime:
         self._rngState = RngState()
         self.RngSeed = 0
         self.MovieBasePath = ""
-        self.CastPath = os.path.join(self.MovieBasePath, "Cast")
         self.MovieScriptInstance: MovieScript | None = None
         self._behaviorScripts: dict[str, type] = {}
         self._parentScripts: dict[str, type] = {}
@@ -58,9 +56,14 @@ class LingoRuntime:
     def GetCastLib(self, castName: str):
         return self._castLibNames[castName]
 
-    @dispatch(Any, Any)
     def GetCastMember(self, nameOrNum, cast=None):
-        found = None
+        if isinstance(nameOrNum, str):
+            found = self.GetCastMemberAnyCast(nameOrNum)
+
+            if found is None:
+                print("failed to find the thing")
+
+            return found
         if isinstance(cast, str):
             found = self._castLibNames[cast].GetMember(nameOrNum)
         elif isinstance(cast, int):
@@ -71,15 +74,6 @@ class LingoRuntime:
             found = self.GetCastMemberAnyCast(nameOrNum)
         else:
             raise AttributeError("Invalid")
-
-        if found is None:
-            print("failed to find the thing")
-
-        return found
-
-    @dispatch(str)
-    def GetCastMember(self, name: str):
-        found = self.GetCastMemberAnyCast(name)
 
         if found is None:
             print("failed to find the thing")
@@ -146,7 +140,7 @@ class LingoRuntime:
         InitLib("MSC", 524288)
 
     def LoadSingleCastMember(self, file: str):
-        fileName, _ = os.path.splitext(file)
+        _, fileName = os.path.split(file)
         match = re.match(self.CastPathRegex(), fileName)
         if match is None:
             print(f"Unable to parse {fileName}")
@@ -265,7 +259,7 @@ class LingoRuntime:
             raise Exception(":(")
 
         self.MovieScriptInstance: MovieScript = movieScriptType()
-        self.MovieScriptInstance.Init(self.MovieScriptInstance, self.Global)
+        self.MovieScriptInstance.Init(self.Global)
 
         for scriptType in behaviorScripts:
             self._behaviorScripts[scriptType.__name__] = scriptType

@@ -81,7 +81,7 @@ class CastMember:
         if name is not None:
             self.name = name
 
-        match self.type:
+        match self.Type:
             case CastMemberType.Bitmap:
                 self.ImportFileImplBitmap(fullPath)
             case CastMemberType.Text:

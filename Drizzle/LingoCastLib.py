@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from Drizzle.LingoRuntime import LingoRuntime
 from Drizzle.Cast.CastMember import CastMember
 from Drizzle.Data.LingoNumber import LingoNumber
-from multipledispatch import dispatch
+from overloading import overload
 from typing import Any
 
 
@@ -27,8 +27,14 @@ class LingoCastLib:
     def member(self):
         raise NotImplementedError("damn")
 
-    @dispatch(Any)
     def GetMember(self, nameOrNum):
+        if isinstance(nameOrNum, int):
+            if 0 < nameOrNum <= len(self._cast):
+                return self._cast[nameOrNum - 1]
+            idx = nameOrNum - self.Offset
+            if 0 < idx < len(self._cast):
+                return self._cast[idx - 1]
+            return None
         if isinstance(nameOrNum, str):
             if self._nameIndexDirty:
                 self.UpdateNameIndex()
@@ -43,15 +49,6 @@ class LingoCastLib:
             numMember = self.GetMember(nameOrNum.IntValue)
             if numMember is not None:
                 return numMember
-        return None
-
-    @dispatch(int)
-    def GetMember(self, num: int):
-        if 0 < num <= len(self._cast):
-            return self._cast[num - 1]
-        idx = num - self.Offset
-        if 0 < idx < len(self._cast):
-            return self._cast[idx - 1]
         return None
 
     def NameIndexDirty(self):

@@ -6,7 +6,7 @@ from Drizzle.Data.LingoRect import LingoRect, LingoPoint, LingoNumber
 from Drizzle.Data.LingoSymbol import LingoSymbol
 from Drizzle.Data.LingoList import LingoList
 from Drizzle.Data.LingoColor import LingoColor
-from Drizzle.Data.LingoImage import LingoImage
+from Drizzle.Data.LingoImage import LingoImage, ImageType
 from Drizzle.Data.LingoSprite import LingoSprite
 from Drizzle.Data.LingoPropertyList import LingoPropertyList
 from Drizzle.Xtra.ImgXtra import ImgXtra, BaseXtra
@@ -15,7 +15,6 @@ from Drizzle.LingoScriptRuntime import LingoScriptRuntime
 import math
 import os
 from multipledispatch import dispatch
-from typing import Any
 
 
 class Global:
@@ -236,44 +235,10 @@ class LingoGlobal:
         return LingoNumber(1) if container.startswith(value) else LingoNumber(0)
 
     @staticmethod
-    @dispatch(Any, Any)
-    def concat(a, b): return f"{a}{b}"
+    def concat(*items): return "".join(items)
 
     @staticmethod
-    @dispatch(str, str)
-    def concat(a, b): return f"{a}{b}"
-
-    @staticmethod
-    @dispatch(Any, Any, Any)
-    def concat(a, b, c): return f"{a}{b}{c}"
-
-    @staticmethod
-    @dispatch(str, str, str)
-    def concat(a, b, c): return f"{a}{b}{c}"
-
-    @staticmethod
-    @dispatch(list)
-    def concat(items): return "".join(items)
-
-    @staticmethod
-    @dispatch(Any, Any)
-    def concat_space(a, b): return f"{a} {b}"
-
-    @staticmethod
-    @dispatch(str, str)
-    def concat_space(a, b): return f"{a} {b}"
-
-    @staticmethod
-    @dispatch(Any, Any, Any)
-    def concat_space(a, b, c): return f"{a} {b} {c}"
-
-    @staticmethod
-    @dispatch(str, str, str)
-    def concat_space(a, b, c): return f"{a} {b}, {c}"
-
-    @staticmethod
-    @dispatch(list)
-    def concat_space(a): return " ".join(a)
+    def concat_space(*a): return " ".join(a)
 
     def slice_helper(self, obj, start: LingoNumber, end: LingoNumber):
         try:
@@ -367,13 +332,11 @@ class LingoGlobal:
 
     def objectp(self, d): raise NotImplementedError("when would this end")
 
-    @dispatch(Any, Any)
-    def member(self, membernameornum, castnameornum=None):
-        return self.LingoRuntime.GetCastMember(membernameornum, castnameornum)
-
     @dispatch(str)
-    def member(self, name: str):
-        return self.LingoRuntime.GetCastMember(name)
+    def member(self, membernameornum: str, castnameornum=None):
+        if castnameornum is None:
+            return self.LingoRuntime.GetCastMember(membernameornum)
+        return self.LingoRuntime.GetCastMember(membernameornum, castnameornum)
 
     @dispatch(LingoNumber, LingoNumber, LingoNumber)
     def color(self, r: LingoNumber, g: LingoNumber, b: LingoNumber):
@@ -389,84 +352,11 @@ class LingoGlobal:
 
     @dispatch(LingoNumber, LingoNumber, LingoSymbol)
     def image(self, w: LingoNumber, h: LingoNumber, Type: LingoSymbol):
-        return LingoImage(w, h, Type)  # todo
+        return LingoImage(w.IntValue, h.IntValue, ImageType[Type.Value])  # todo
 
-    @dispatch(Any)
-    def string(self, value): return str(value)
-
-    @dispatch(LingoNumber)
     def string(self, value): return str(value)
 
     @staticmethod
-    @dispatch(LingoNumber, LingoNumber)
-    def op_add(a: LingoNumber, b: LingoNumber): return a + b
-
-    @staticmethod
-    @dispatch(LingoNumber, LingoNumber)
-    def op_sub(a: LingoNumber, b: LingoNumber): return a - b
-
-    @staticmethod
-    @dispatch(LingoNumber, LingoNumber)
-    def op_mul(a: LingoNumber, b: LingoNumber): return a * b
-
-    @staticmethod
-    @dispatch(LingoNumber, LingoNumber)
-    def op_div(a: LingoNumber, b: LingoNumber): return a / b
-
-    @staticmethod
-    @dispatch(LingoNumber, LingoNumber)
-    def op_mod(a: LingoNumber, b: LingoNumber): return a % b
-
-    @staticmethod
-    @dispatch(LingoPoint, LingoPoint)
-    def op_add(a: LingoPoint, b: LingoPoint): return a + b
-
-    @staticmethod
-    @dispatch(LingoPoint, LingoPoint)
-    def op_sub(a: LingoPoint, b: LingoPoint): return a - b
-
-    @staticmethod
-    @dispatch(LingoPoint, LingoPoint)
-    def op_mul(a: LingoPoint, b: LingoPoint): return a * b
-
-    @staticmethod
-    @dispatch(LingoPoint, LingoPoint)
-    def op_div(a: LingoPoint, b: LingoPoint): return a / b
-
-    @staticmethod
-    @dispatch(LingoPoint, LingoNumber)
-    def op_add(a: LingoPoint, b: LingoNumber): return a + b
-
-    @staticmethod
-    @dispatch(LingoPoint, LingoNumber)
-    def op_sub(a: LingoPoint, b: LingoNumber): return a - b
-
-    @staticmethod
-    @dispatch(LingoPoint, LingoNumber)
-    def op_mul(a: LingoPoint, b: LingoNumber): return a * b
-
-    @staticmethod
-    @dispatch(LingoPoint, LingoNumber)
-    def op_div(a: LingoPoint, b: LingoNumber): return a / b
-
-    @staticmethod
-    @dispatch(LingoRect, LingoRect)
-    def op_add(a: LingoRect, b: LingoRect): return a + b
-
-    @staticmethod
-    @dispatch(LingoRect, LingoRect)
-    def op_sub(a: LingoRect, b: LingoRect): return a - b
-
-    @staticmethod
-    @dispatch(LingoRect, LingoRect)
-    def op_mul(a: LingoRect, b: LingoRect): return a * b
-
-    @staticmethod
-    @dispatch(LingoRect, LingoRect)
-    def op_div(a: LingoRect, b: LingoRect): return a / b
-
-    @staticmethod
-    @dispatch(Any, Any)
     def op_add(a, b):
         if isinstance(a, LingoNumber) and b is None:
             return a
@@ -481,7 +371,6 @@ class LingoGlobal:
         return a + b
 
     @staticmethod
-    @dispatch(Any, Any)
     def op_sub(a, b):
         if isinstance(a, LingoNumber) and b is None:
             return a
@@ -496,7 +385,6 @@ class LingoGlobal:
         return a - b
 
     @staticmethod
-    @dispatch(Any, Any)
     def op_mul(a, b):
         if isinstance(a, LingoNumber) and b is None:
             return LingoNumber(0)
@@ -511,7 +399,6 @@ class LingoGlobal:
         return a * b
 
     @staticmethod
-    @dispatch(Any, Any)
     def op_div(a, b):
         if isinstance(a, LingoNumber) and b is None:
             return a / LingoNumber(0)  # the chaos
@@ -526,7 +413,6 @@ class LingoGlobal:
         return a / b
 
     @staticmethod
-    @dispatch(Any, Any)
     def op_mod(a, b):
         if isinstance(a, LingoNumber) and b is None:
             return a % LingoNumber(0)  # the chaos
@@ -541,13 +427,7 @@ class LingoGlobal:
         return a % b
 
     @staticmethod
-    @dispatch(LingoNumber, LingoNumber)
-    def op_eq_b(a: LingoNumber, b: LingoNumber):
-        return a == b
-
-    @staticmethod
-    @dispatch(Any, Any)
-    def op_eq_b(a: Any, b: Any):
+    def op_eq_b(a, b):
         # some stuff i wouldn't care about
         if type(a) is not type(b):
             return False
@@ -556,92 +436,46 @@ class LingoGlobal:
         return a == b
 
     @staticmethod
-    @dispatch(Any, Any)
-    def op_eq(a: Any, b: Any) -> LingoNumber:
+    def op_eq(a, b) -> LingoNumber:
         return LingoNumber(1) if LingoGlobal.op_eq_b(a, b) else LingoNumber(0)
 
     @staticmethod
-    @dispatch(LingoNumber, LingoNumber)
-    def op_eq(a: LingoNumber, b: LingoNumber) -> LingoNumber:
-        return LingoNumber(1) if LingoGlobal.op_eq_b(a, b) else LingoNumber(0)
-
-    @staticmethod
-    @dispatch(Any, Any)
-    def op_ne_b(a: Any, b: Any) -> bool:
+    def op_ne_b(a, b) -> bool:
         return not LingoGlobal.op_eq_b(a, b)
 
     @staticmethod
-    @dispatch(LingoNumber, LingoNumber)
-    def op_ne_b(a: LingoNumber, b: LingoNumber) -> bool:
-        return not LingoGlobal.op_eq_b(a, b)
-
-    @staticmethod
-    @dispatch(Any, Any)
-    def op_ne(a: Any, b: Any) -> LingoNumber:
+    def op_ne(a, b) -> LingoNumber:
         return LingoNumber(1) if LingoGlobal.op_eq_b(a, b) else LingoNumber(0)
 
     @staticmethod
-    @dispatch(LingoNumber, LingoNumber)
-    def op_ne(a: LingoNumber, b: LingoNumber) -> LingoNumber:
-        return LingoNumber(1) if LingoGlobal.op_eq_b(a, b) else LingoNumber(0)
-
-    @staticmethod
-    @dispatch(Any, Any)
-    def op_lt(a: Any, b: Any): return LingoNumber(1) if a < b else LingoNumber(0)
-
-    @staticmethod
-    @dispatch(LingoNumber, LingoNumber)
-    def op_lt(a: LingoNumber, b: LingoNumber): return LingoNumber(1) if a < b else LingoNumber(0)
+    def op_lt(a, b): return LingoNumber(1) if a < b else LingoNumber(0)
     
     @staticmethod
-    @dispatch(Any, Any)
-    def op_le(a: Any, b: Any): return LingoNumber(1) if a >= b else LingoNumber(0)
-
-    @staticmethod
-    @dispatch(LingoNumber, LingoNumber)
-    def op_le(a: LingoNumber, b: LingoNumber): return LingoNumber(1) if a >= b else LingoNumber(0)
+    def op_le(a, b): return LingoNumber(1) if a >= b else LingoNumber(0)
     
     @staticmethod
-    @dispatch(Any, Any)
-    def op_gt(a: Any, b: Any): return LingoNumber(1) if a > b else LingoNumber(0)
-
-    @staticmethod
-    @dispatch(LingoNumber, LingoNumber)
-    def op_gt(a: LingoNumber, b: LingoNumber): return LingoNumber(1) if a > b else LingoNumber(0)
+    def op_gt(a, b): return LingoNumber(1) if a > b else LingoNumber(0)
     
     @staticmethod
-    @dispatch(Any, Any)
-    def op_ge(a: Any, b: Any): return LingoNumber(1) if a <= b else LingoNumber(0)
+    def op_ge(a, b): return LingoNumber(1) if a <= b else LingoNumber(0)
 
     @staticmethod
-    @dispatch(LingoNumber, LingoNumber)
-    def op_ge(a: LingoNumber, b: LingoNumber): return LingoNumber(1) if a <= b else LingoNumber(0)
-
-    @staticmethod
-    @dispatch(Any, Any)
-    def op_and(a: Any, b: Any):
+    def op_and(a, b):
         bA = LingoGlobal.ToBool(a)
         bB = LingoGlobal.ToBool(b)
         return LingoNumber(1) if bA and bB else LingoNumber(0)
 
     @staticmethod
-    @dispatch(Any, Any)
-    def op_or(a: Any, b: Any):
+    def op_or(a, b):
         bA = LingoGlobal.ToBool(a)
         bB = LingoGlobal.ToBool(b)
         return LingoNumber(1) if bA or bB else LingoNumber(0)
 
     @staticmethod
-    @dispatch(Any)
-    def ToBool(a: Any):
+    def ToBool(a):
         if isinstance(a, LingoNumber):
-            return a.IntValue != 0
+            return a.DecimalValue != 0
         return a is not None
-
-    @staticmethod
-    @dispatch(LingoNumber)
-    def ToBool(a: LingoNumber):
-        return a.DecimalValue != 0
 
     @property
     def the_platform(self):
@@ -650,11 +484,11 @@ class LingoGlobal:
     def sprite(self, *args): return LingoSprite()
     
     def sound(self, *args): return NotImplementedError("Please god")
+
     def call(self, *args): return NotImplementedError("Help me finish this")
 
-    def str(self, a: Any):
-        return str(a)
-    
+    def str(self, a): return str(a)
+
     @staticmethod
     def chars(string: str, first: LingoNumber, last: LingoNumber):
         if first == last:

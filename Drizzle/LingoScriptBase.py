@@ -13,7 +13,6 @@ class LingoScriptBase(LingoScriptRuntimeBase):
         self._movieScript: MovieScript | None = None
         self._global: LingoGlobal | None = None
 
-    @dispatch(Any, LingoGlobal)
     def Init(self, movieScript: MovieScript, glob: LingoGlobal):
         self._movieScript = movieScript
         self._global = glob

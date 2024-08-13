@@ -13,34 +13,41 @@ class LingoColor:
     Palette[6] = PackRed
     Palette[255] = PackBlack
 
-    def __init__(self, r, g, b):
+    @dispatch(int, int, int)
+    def __init__(self, r: int, g: int, b: int):
         self.RedByte = r
-        self.GreenByte = r
-        self.BlueByte = r
+        self.GreenByte = g
+        self.BlueByte = b
+
+    @dispatch(LingoNumber, LingoNumber, LingoNumber)
+    def __init__(self, r: LingoNumber, g: LingoNumber, b: LingoNumber):
+        self.RedByte = r.IntValue
+        self.GreenByte = g.IntValue
+        self.BlueByte = b.IntValue
 
     @property
     def red(self):
-        return self.RedByte
+        return LingoNumber(self.RedByte)
 
     @red.setter
     def red(self, value):
-        self.RedByte = value
+        self.RedByte = value.IntValue
 
     @property
     def green(self):
-        return self.GreenByte
+        return LingoNumber(self.GreenByte)
 
     @green.setter
     def green(self, value):
-        self.GreenByte = value
+        self.GreenByte = value.IntValue
 
     @property
     def blue(self):
-        return self.BlueByte
+        return LingoNumber(self.BlueByte)
 
     @blue.setter
     def blue(self, value):
-        self.BlueByte = value
+        self.BlueByte = value.IntValue
 
     def BitPack(self):
         return 0xFF000000 | self.RedByte << 16 | self.GreenByte << 8 | self.BlueByte

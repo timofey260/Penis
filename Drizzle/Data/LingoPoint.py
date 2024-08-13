@@ -1,6 +1,5 @@
 from __future__ import annotations
 from Drizzle.Data.LingoNumber import LingoNumber
-from PySide6.QtCore import QPointF
 from multipledispatch import dispatch
 
 
@@ -28,8 +27,8 @@ class LingoPoint:
     def __len__(self):
         return 2
 
-    def asPoint(self) -> QPointF:
-        return QPointF(self.locv.DecimalValue, self.loch.DecimalValue)
+    # def asPoint(self) -> QPointF:
+    #     return QPointF(self.locv.DecimalValue, self.loch.DecimalValue)
 
     def inside(self, rect) -> bool:
         from Drizzle.Data.LingoRect import LingoRect
