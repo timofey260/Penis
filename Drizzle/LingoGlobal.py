@@ -150,15 +150,15 @@ class LingoGlobal:
         self._player: Player | None = None
         self.LingoRuntime: LingoRuntime = runtime
 
-        self.BACKSPACE = "\x08"
-        self.EMPTY = ""
-        self.ENTER = "\x03"
-        self.QUOTE = "\""
-        self.RETURN = "\r"
-        self.SPACE = " "
-        self.VOID = None
-
         self.ScriptRuntime: LingoScriptRuntime | None = None
+
+    BACKSPACE = "\x08"
+    EMPTY = ""
+    ENTER = "\x03"
+    QUOTE = "\""
+    RETURN = "\r"
+    SPACE = " "
+    VOID = None
 
     TRUE = LingoNumber(1)
     FALSE = LingoNumber(0)
@@ -547,7 +547,7 @@ class LingoGlobal:
 
     @staticmethod
     @dispatch(Any, Any)
-    def op_eq_b(a: LingoNumber, b: LingoNumber):
+    def op_eq_b(a: Any, b: Any):
         # some stuff i wouldn't care about
         if type(a) is not type(b):
             return False
@@ -651,6 +651,9 @@ class LingoGlobal:
     
     def sound(self, *args): return NotImplementedError("Please god")
     def call(self, *args): return NotImplementedError("Help me finish this")
+
+    def str(self, a: Any):
+        return str(a)
     
     @staticmethod
     def chars(string: str, first: LingoNumber, last: LingoNumber):
