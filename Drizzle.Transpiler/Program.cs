@@ -606,7 +606,9 @@ internal static class Program
             {
                 // Handle null int value in switch case.
                 // I'm gonna assume Joar never felt like using int.MaxValue anywhere.
-                ctx.Writer.Write(" if value is not None else 9999999999"); // todo
+                ctx.Writer.Write(" if "); // todo
+                ctx.Writer.Write(WriteExpression(node.Expression, ctx));
+                ctx.Writer.Write(" is not None else 9999999999")
             }
 
             ctx.Writer.WriteLine(": {");

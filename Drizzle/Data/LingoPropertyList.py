@@ -4,13 +4,11 @@ from multipledispatch import dispatch
 
 
 class LingoPropertyList:
-    @dispatch()
-    def __init__(self, count):
-        self.Dict = {}
-
-    @dispatch(dict)
-    def __init__(self, d: dict):
-        self.Dict = d
+    def __init__(self, *args):
+        if len(args) == 1:
+            self.Dict = {}
+            return
+        self.Dict = {k: v for k, v in zip(args[0::2], args[1::2])}
 
     def __len__(self):
         return len(self.Dict)
@@ -32,4 +30,4 @@ class LingoPropertyList:
         return self.Dict[value] if value in self.Dict.keys() else None
 
     def __str__(self):
-        return print([f"{k}: {v}" for k, v in self.Dict.items()])
+        return "[" + ", ".join([f"{k}: {v}" for k, v in self.Dict.items()]) + "]"
