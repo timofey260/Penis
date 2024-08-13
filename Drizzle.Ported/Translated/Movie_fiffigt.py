@@ -8,6 +8,6 @@ from Drizzle.Runtime import *## Movie script: fiffigt#class MovieScript:     
         objfileio.closefile()
         fileopener = self._global.new(self._global.xtra("fileio"))        fileopener.openfile(LingoGlobal.concat(self._global.the_moviePath,"Levels/",lvlname,".txt"),LingoNumber(0))
         tmp_q=int(LingoNumber(1))        while tmp_q < LingoGlobal.thenumberoflines_helper(txt):             q = tmp_q            fileopener.writestr(LingoGlobal.lineof_helper(q,txt))
-            fileopener.writereturn(windows)
+            fileopener.writereturn(LingoSymbol("windows"))
             tmp_q = q            tmp_q += 1                    fileopener.closefile()
         fileopener = LingoGlobal.VOID        self._global.put(LingoGlobal.concat_space("saved22:",lvlname))        return None            def lerpvector(self, a, b, l):         return LingoGlobal.point(self.lerp(a.loch,b.loch,l),self.lerp(a.locv,b.locv,l))                    def seedoftile(self, tile):         return LingoGlobal.op_add(LingoGlobal.op_add(self.gLOprops.tileseed,LingoGlobal.op_mul(tile.locv,self.gLOprops.size.loch)),tile.loch)                    def bezier(self, a, ca, b, cb, f):         middlecontrol = None        middlecontrol = self.lerpvector(ca,cb,f)        ca = self.lerpvector(a,ca,f)        cb = self.lerpvector(cb,b,f)        ca = self.lerpvector(ca,middlecontrol,f)        cb = self.lerpvector(middlecontrol,cb,f)        return self.lerpvector(ca,cb,f)                    
