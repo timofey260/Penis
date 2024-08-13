@@ -272,6 +272,7 @@ internal static class Program
                     super().Init(self, glob)
 
                 def __init__(self):
+                    super().__init__()
                     self._imageCache = LruCache(64)
 
                 def cacheloadimage(self, fileName: str):
@@ -415,11 +416,11 @@ internal static class Program
             var returnType = MapType("return", types);
             writer.WriteLine($"def {WriteSanitizeIdentifier(handlerLower)}({paramsText}): {{");
 
-
+            /*
             foreach (var local in handlerContext.DeclaredLocals)
             {
                 writer.WriteLine($"{local.ToLower()} = None"); // todo
-            }
+            }*/
 
             writer.WriteLine(tempWriter.GetStringBuilder());
 
@@ -584,14 +585,14 @@ internal static class Program
         var name = node.Variable;
         var loopTmp = $"tmp_{name}";
 
-        ctx.Writer.WriteLine($"{loopTmp}=int({start})");
-        ctx.Writer.WriteLine($"while {loopTmp} < {end}: {{");
+        ctx.Writer.WriteLine($"{loopTmp} = {start}");
+        ctx.Writer.WriteLine($"while {loopTmp}.IntValue < {end}: {{");
 
         MakeLoopTmp(ctx, name, $"{loopTmp}", number: true); // todo
         WriteStatementBlock(node.Block, ctx);
 
-        ctx.Writer.WriteLine($"{loopTmp} = int({WriteVariableNameCore(name, ctx)})");
-        ctx.Writer.WriteLine($"{loopTmp} += 1");
+        ctx.Writer.WriteLine($"{loopTmp} = {WriteVariableNameCore(name, ctx)}");
+        ctx.Writer.WriteLine($"{loopTmp} += LingoNumber(1)");
         ctx.Writer.WriteLine("}");
 
         // ctx.LoopTempIdx--;
@@ -606,7 +607,7 @@ internal static class Program
                 MergeTypeSpec(ctx, name, "number");
         }
 
-        ctx.Writer.WriteLine($"{WriteVariableNameCore(name, ctx)} = LingoNumber({loopTmp})");
+        ctx.Writer.WriteLine($"{WriteVariableNameCore(name, ctx)} = {loopTmp}");
     }
 
     private static void WriteRepeatWhile(AstNode.RepeatWhile node, HandlerContext ctx)
