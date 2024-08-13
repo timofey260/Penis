@@ -549,7 +549,7 @@ internal static class Program
         MakeLoopTmp(ctx, name, $"{loopTmp}", number: true); // todo
         WriteStatementBlock(node.Block, ctx);
 
-        ctx.Writer.WriteLine($"{loopTmp} = {WriteVariableNameCore(name, ctx)}");
+        ctx.Writer.WriteLine($"{loopTmp} = int({WriteVariableNameCore(name, ctx)})");
         ctx.Writer.WriteLine($"{loopTmp} += 1");
         ctx.Writer.WriteLine("}");
 
@@ -565,7 +565,7 @@ internal static class Program
                 MergeTypeSpec(ctx, name, "number");
         }
 
-        ctx.Writer.WriteLine($"{WriteVariableNameCore(name, ctx)} = {loopTmp}");
+        ctx.Writer.WriteLine($"{WriteVariableNameCore(name, ctx)} = LingoNumber({loopTmp})");
     }
 
     private static void WriteRepeatWhile(AstNode.RepeatWhile node, HandlerContext ctx)
