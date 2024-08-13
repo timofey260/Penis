@@ -10,7 +10,7 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 .desktop
-/Drizzle.Ported/Translated
+/Drizzle/Translated
 
 # Temporary directory used when making release builds.
 ReleaseBuild/

@@ -10,4 +10,5 @@ from Drizzle.Data.LingoColor import LingoColor
 from Drizzle.Data.LruCache import LruCache
 from Drizzle.LingoRuntime import LingoRuntime
 from Drizzle.LingoScriptBase import LingoScriptBase
+from Drizzle.LingoParentScript import LingoParentScript
 minimized = False

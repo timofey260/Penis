@@ -253,11 +253,11 @@ class LingoRuntime:
 
         for tp in self._assembly.GetTypes():
             tp: type
-            if isinstance(tp, MovieScript):
+            if tp == MovieScript:
                 movieScriptType = tp
-            if isinstance(tp, LingoParentScript):
+            if tp.__base__ == LingoParentScript:
                 parentScripts.append(type)
-            if isinstance(tp, LingoBehaviorScript):
+            if tp.__base__ == LingoBehaviorScript:
                 behaviorScripts.append(tp)
 
         if movieScriptType is None:
@@ -288,7 +288,7 @@ class LingoRuntime:
         return instance
 
     @dispatch(str, LingoList)
-    def CreateScript(self, Type: str, l: LingoList):
+    def CreateScript(self, Type: str, l: LingoList = LingoList()):
         scriptType = self._parentScripts.get(Type, None)
         if scriptType is None:
             scriptType = self._behaviorScripts.get(Type, None)
@@ -300,7 +300,7 @@ class LingoRuntime:
         return instance
 
     @dispatch(type, LingoList)
-    def CreateScript(self, Type: type, l: LingoList):
+    def CreateScript(self, Type: type, l: LingoList = LingoList()):
         instance = self.InstantiateScriptType(Type)
         # newMethod = instance.new()
         return instance

@@ -685,7 +685,7 @@ class LingoGlobal:
             val = "symbol"
         elif isinstance(obj, LingoImage):
             val = "image"
-        elif isinstance(obj, None):
+        elif obj is None:
             val = "void"
         else:
             raise NotImplementedError()

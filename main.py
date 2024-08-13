@@ -1,6 +1,13 @@
-from Drizzle.Data.LingoList import LingoList, LingoNumber
+from Drizzle.LingoRuntime import LingoRuntime
+from Drizzle.Data.Assembly import Assembly
+from Drizzle.Misc.EditorRuntimeHelpers import EditorRuntimeHelpers
 
-algo = LingoList([LingoNumber(0), LingoNumber(1), LingoNumber(-2)])
-algo.sort()
-for i in algo:
-    print(i)
+
+if __name__ == '__main__':
+    asm = Assembly()
+    runtime = LingoRuntime(asm)
+    runtime.Init()
+    EditorRuntimeHelpers.RunStartup(runtime)
+    filename = ""
+    EditorRuntimeHelpers.RunLoadLevel(runtime, filename)
+

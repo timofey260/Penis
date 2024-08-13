@@ -21,11 +21,11 @@ class LruCache:
 
         self.Clear()
 
-    @dispatch(Any, Callable)
+    @dispatch(Any, Any)
     def Get(self, key, load):
         return self.Get(key, load, lambda func, key: func(key))
 
-    @dispatch(Any, Any, Callable)
+    @dispatch(Any, Any, Any)
     def Get(self, key, state, load: Callable):
         CacheIdx = self._cacheEntries.get(key)
         if CacheIdx is not None:
