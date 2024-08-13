@@ -6,4 +6,8 @@ from Drizzle.Data.LingoList import LingoList
 from Drizzle.LingoGlobal import LingoGlobal
 from Drizzle.Data.LingoImage import LingoImage
 from Drizzle.Data.LingoSymbol import LingoSymbol
+from Drizzle.Data.LingoColor import LingoColor
+from Drizzle.Data.LruCache import LruCache
+from Drizzle.LingoRuntime import LingoRuntime
+from Drizzle.LingoScriptBase import LingoScriptBase
 minimized = False
