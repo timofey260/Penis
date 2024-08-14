@@ -27,8 +27,8 @@ class LingoPoint:
     def __len__(self):
         return 2
 
-    # def asPoint(self) -> QPointF:
-    #     return QPointF(self.locv.DecimalValue, self.loch.DecimalValue)
+    def asPoint(self):
+        return self.locv.DecimalValue, self.loch.DecimalValue
 
     def inside(self, rect) -> bool:
         from Drizzle.Data.LingoRect import LingoRect

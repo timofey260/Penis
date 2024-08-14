@@ -1,5 +1,6 @@
 from __future__ import annotations
 import math
+import sys
 
 
 class LingoNumber:
@@ -27,8 +28,8 @@ class LingoNumber:
         return LingoNumber(self.DecimalValue)
 
     @staticmethod
-    def findpos(obj):
-        return 0  # todo
+    def findpos(val):
+        return -sys.maxsize * 2 - 1
 
     @staticmethod
     def Parse(text: str) -> LingoNumber:

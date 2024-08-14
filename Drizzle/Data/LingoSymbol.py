@@ -3,7 +3,7 @@ from __future__ import annotations
 
 class LingoSymbol:
     def __init__(self, value: str):
-        self.Value = value
+        self.Value = value.lower()  # just to ensure that it will not be case sensetive
 
     def __str__(self):
         return f"#{self.Value}"

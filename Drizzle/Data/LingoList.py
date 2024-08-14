@@ -3,19 +3,13 @@ from Drizzle.Data.LingoNumber import LingoNumber
 from multipledispatch import dispatch
 from typing import Any
 
+
 class LingoList:
-
-    @dispatch()
-    def __init__(self):
-        self.List = []
-
-    @dispatch(int)
-    def __init__(self, capacity: int):
-        self.List = []
-
-    @dispatch(list)
-    def __init__(self, items: list):
-        self.List = items
+    def __init__(self, *args):
+        if len(args) == 0:
+            self.List = []
+            return
+        self.List = args
 
     def __len__(self):
         return len(self.List)

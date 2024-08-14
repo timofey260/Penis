@@ -16,7 +16,7 @@ class LingoPropertyList:
     def __getitem__(self, item):
         # if isinstance(item, LingoNumber):
         #     item = item.IntValue
-        return self.Dict[item]
+        return self.Dict.get(item)
 
     def __setitem__(self, key, value):
         self.Dict[key] = value

@@ -352,7 +352,7 @@ class LingoGlobal:
 
     @dispatch(LingoNumber, LingoNumber, LingoSymbol)
     def image(self, w: LingoNumber, h: LingoNumber, Type: LingoSymbol):
-        return LingoImage(w.IntValue, h.IntValue, ImageType[Type.Value])  # todo
+        return LingoImage(w.IntValue, h.IntValue, ImageType[Type.Value])
 
     def string(self, value): return str(value)
 

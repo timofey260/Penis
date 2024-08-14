@@ -15,7 +15,7 @@ from Drizzle.Data.Stopwatch import Stopwatch
 from Drizzle.Data.Assembly import Assembly
 from copy import deepcopy
 
-AssemblyLocation = os.path.dirname(os.path.dirname(__file__))  # todo
+AssemblyLocation = os.path.dirname(os.path.dirname(__file__))
 
 
 class RngState:
