@@ -27,8 +27,8 @@ class FileIOXtra(BaseXtra):
             raise FileNotFoundError("nuh uh")
         return self._file.read()
 
-    def createfile(self):
-        with open(self._file.name, "w"):
+    def createfile(self, path):
+        with open(path, "w"):
             pass
 
     def closefile(self):
@@ -42,7 +42,7 @@ class FileIOXtra(BaseXtra):
         self._file.close()
         os.remove(name)
 
-    def writestring(self, text: str):
+    def writestr(self, text: str):
         if self._file is None:
             raise FileNotFoundError("theres no fucking file")
         self._file.write(text)

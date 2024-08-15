@@ -12,7 +12,7 @@ class ImageTest(unittest.TestCase):
         self.assertEqual(img.getpixel(0, 0), LingoColor(255, 255, 0))
         self.assertEqual(img.getpixel(0, 1), LingoColor(255, 255, 255))
         img2.fill(LingoColor(0, 255, 0))
-        img2.copypixels(img, LingoList(LingoPoint(0, 0), LingoPoint(2, 0), LingoPoint(2, 2), LingoPoint(0, 2)),
+        img2.copypixels(img, LingoRect(LingoNumber(50), LingoNumber(50), LingoNumber(60), LingoNumber(70)),
                         LingoRect(LingoNumber(0), LingoNumber(0), img.width, img.height), LingoPropertyList())
         img.SaveAsPng("shit.png")
         img2.SaveAsPng("shit2.png")

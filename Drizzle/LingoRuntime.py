@@ -81,6 +81,8 @@ class LingoRuntime:
         return found
 
     def GetCastMemberAnyCast(self, nameOrNum):
+        for k, v in self._castLibNames.items():
+            print(k, v)
         if isinstance(nameOrNum, str):
             if self._castMemberNameIndexDirty:
                 self.UpdateMemberNameIndex()
@@ -281,20 +283,15 @@ class LingoRuntime:
         instance.Init(self.MovieScriptInstance, self.Global)
         return instance
 
-    @dispatch(str, LingoList)
     def CreateScript(self, Type: str, l: LingoList = LingoList()):
-        scriptType = self._parentScripts.get(Type, None)
-        if scriptType is None:
-            scriptType = self._behaviorScripts.get(Type, None)
+        if isinstance(Type, str):
+            scriptType = self._parentScripts.get(Type, None)
             if scriptType is None:
-                raise AttributeError("bullshit")
+                scriptType = self._behaviorScripts.get(Type, None)
+                if scriptType is None:
+                    raise AttributeError("bullshit")
+            Type = scriptType
 
-        instance = self.InstantiateScriptType(scriptType)
-        # newMethod = instance.new()
-        return instance
-
-    @dispatch(type, LingoList)
-    def CreateScript(self, Type: type, l: LingoList = LingoList()):
         instance = self.InstantiateScriptType(Type)
         # newMethod = instance.new()
         return instance

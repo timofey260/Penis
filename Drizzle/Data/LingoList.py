@@ -11,6 +11,10 @@ class LingoList:
             return
         self.List = args
 
+    @property
+    def count(self):
+        return self.__len__()
+
     def __len__(self):
         return len(self.List)
 

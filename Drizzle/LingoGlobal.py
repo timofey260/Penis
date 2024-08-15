@@ -22,7 +22,165 @@ class Global:
         self._global = glob
 
     def clearglobals(self):
-        raise NotImplementedError("ahwhafowa")
+        movieScript = self._global.MovieScriptInstance
+        from Drizzle.MovieScript import MovieScript
+        MovieScript.gLoadedName: ... = None
+        MovieScript.INT_EXIT: str = None
+        MovieScript.INT_EXRD: str = None
+        MovieScript.DRInternalList: LingoList = None
+        MovieScript.DRFirstTileCat: LingoNumber = None
+        MovieScript.DRLastMatCat: LingoNumber = None
+        MovieScript.RandomMetals_allowed: LingoList = None
+        MovieScript.RandomMetals_grabTiles: LingoList = None
+        MovieScript.ChaoticStone2_needed: LingoList = None
+        MovieScript.DRRandomMetal_needed: LingoList = None
+        MovieScript.SmallMachines_grabTiles: LingoList = None
+        MovieScript.SmallMachines_forbidden: LingoList = None
+        MovieScript.RandomMachines_forbidden: LingoList = None
+        MovieScript.RandomMachines_grabTiles: LingoList = None
+        MovieScript.RandomMachines2_forbidden: LingoList = None
+        MovieScript.RandomMachines2_grabTiles: LingoList = None
+        MovieScript.gLOprops: ... = None
+        MovieScript.gCameraProps: ... = None
+        MovieScript.gLightEProps: ... = None
+        MovieScript.gLEProps: ... = None
+        MovieScript.gEnvEditorProps: ... = None
+        MovieScript.gLevel: ... = None
+        MovieScript.gSkyColor: ... = None
+        MovieScript.gTEprops: ... = None
+        MovieScript.gLastImported: str = None
+        MovieScript.tileSetIndex: LingoList = None
+        MovieScript.gTiles: LingoList = None
+        MovieScript.gTinySignsDrawn: LingoNumber = None
+        MovieScript.gRenderCameraTilePos: LingoPoint = None
+        MovieScript.gRenderCameraPixelPos: LingoPoint = None
+        MovieScript.gRenderTrashProps: LingoList = None
+        MovieScript.gMegaTrash: ... = None
+        MovieScript.gDRMatFixes: LingoNumber = None
+        MovieScript.gDRInvI: LingoNumber = None
+        MovieScript.gRRSpreadsMore: LingoNumber = None
+        MovieScript.gShortcuts: ... = None
+        MovieScript.gEEprops: ... = None
+        MovieScript.gAnyDecals: LingoNumber = None
+        MovieScript.gTrashPropOptions: LingoList = None
+        MovieScript.gProps: LingoList = None
+        MovieScript.templeStoneCorners: ... = None
+        MovieScript.DRLastMatImp: ... = None
+        MovieScript.DRLastSlpImp: ... = None
+        MovieScript.DRLastFlrImP: ... = None
+        MovieScript.DRLastTexImp: ... = None
+        MovieScript.DRCustomMatList: ... = None
+        MovieScript.DRLastTL: ... = None
+        MovieScript.r: LingoNumber = None
+        MovieScript.solidMtrx: LingoList = None
+        MovieScript.effectIn3D: LingoNumber = None
+        MovieScript.gLASTDRAWWASFULLANDMINI: ... = None
+        MovieScript.ropeModel: ... = None
+        MovieScript.gCurrentRenderCamera: LingoNumber = None
+        MovieScript.gPEprops: ... = None
+        MovieScript.gSaveProps: LingoList = None
+        MovieScript.newSize: ... = None
+        MovieScript.extraBufferTiles: ... = None
+        MovieScript.gEffects: LingoList = None
+        MovieScript.lstSpace: ... = None
+        MovieScript.gDirectionKeys: ... = None
+        MovieScript.showControls: ... = None
+        MovieScript.gEnvEditButtons: ... = None
+        MovieScript.gLastEnvEditButtons: ... = None
+        MovieScript.c: LingoNumber = None
+        MovieScript.pal: ... = None
+        MovieScript.pal2: ... = None
+        MovieScript.gPalette: ... = None
+        MovieScript.gEffectPaletteA: ... = None
+        MovieScript.gEffectPaletteB: ... = None
+        MovieScript.gFogColor: ... = None
+        MovieScript.keepLooping: LingoNumber = None
+        MovieScript.gCustomColor: ... = None
+        MovieScript.dptsL: LingoList = None
+        MovieScript.fogDptsL: LingoList = None
+        MovieScript.gGradientImages: ... = None
+        MovieScript.gDecalColors: LingoList = None
+        MovieScript.levelName: ... = None
+        MovieScript.gFullRender: ... = None
+        MovieScript.gViewRender: LingoNumber = None
+        MovieScript.gMassRenderL: ... = None
+        MovieScript.gBlurOptions: ... = None
+        MovieScript.gEditLizard: ... = None
+        MovieScript.gPrioCam: ... = None
+        MovieScript.snapToGrid: ... = None
+        MovieScript.preciseSnap: ... = None
+        MovieScript.stg: ... = None
+        MovieScript.ps: ... = None
+        MovieScript.lvlPropOutput: ... = None
+        MovieScript.hideHelpClick: ... = None
+        MovieScript.massRenderSelectL: ... = None
+        MovieScript.gSEprops: ... = None
+        MovieScript.geverysecond: ... = None
+        MovieScript.firstFrame: ... = None
+        MovieScript.glgtimgQuad: LingoList = None
+        MovieScript.projects: ... = None
+        MovieScript.ldPrps: ... = None
+        MovieScript.gLOADPATH: ... = None
+        MovieScript.TEdraw: ... = None
+        MovieScript.gPEblink: ... = None
+        MovieScript.gPEcounter: ... = None
+        MovieScript.peScrollPos: ... = None
+        MovieScript.peSavedRotat: ... = None
+        MovieScript.peSavedFlip: ... = None
+        MovieScript.peFreeQuad: ... = None
+        MovieScript.peMousePos: ... = None
+        MovieScript.lastPeMouse: ... = None
+        MovieScript.mouseStill: ... = None
+        MovieScript.propSettings: ... = None
+        MovieScript.editSettingsProp: ... = None
+        MovieScript.peSavedStretch: ... = None
+        MovieScript.settingsPropType: ... = None
+        MovieScript.gPEcolors: ... = None
+        MovieScript.closestProp: LingoNumber = None
+        MovieScript.longPropPlacePos: ... = None
+        MovieScript.settingCursor: ... = None
+        MovieScript.loadedPropPreviews: ... = None
+        MovieScript.grimeActive: LingoNumber = None
+        MovieScript.grimeOnGradients: LingoNumber = None
+        MovieScript.bkgFix: LingoNumber = None
+        MovieScript.vertRepeater: LingoNumber = None
+        MovieScript.colr: LingoColor = None
+        MovieScript.colrDetail: ... = None
+        MovieScript.colrInd: ... = None
+        MovieScript.gdLayer: str = None
+        MovieScript.gdDetailLayer: ... = None
+        MovieScript.gdIndLayer: ... = None
+        MovieScript.gEffectProps: ... = None
+        MovieScript.effectSeed: LingoNumber = None
+        MovieScript.lrSup: ... = None
+        MovieScript.chOp: ... = None
+        MovieScript.fatOp: ... = None
+        MovieScript.gradAf: ... = None
+        MovieScript.gRotOp: ... = None
+        MovieScript.slimeFxt: LingoNumber = None
+        MovieScript.DRWhite: ... = None
+        MovieScript.DRPxl: ... = None
+        MovieScript.DRPxlRect: ... = None
+        MovieScript.colrIntensity: ... = None
+        MovieScript.fruitDensity: ... = None
+        MovieScript.leafDensity: ... = None
+        MovieScript.daddyCorruptionHoles: LingoList = None
+        MovieScript.q: LingoNumber = None
+        MovieScript.tm: LingoNumber = None
+        MovieScript.pos: LingoPoint = None
+        MovieScript.mvL: ... = None
+        MovieScript.gLastImportedImage: LingoImage = None
+        MovieScript.afterEffects: LingoNumber = None
+        MovieScript.gCurrentlyRenderingTrash: LingoNumber = None
+        MovieScript.gESoftProp: LingoNumber = None
+        MovieScript.softProp: ... = None
+        MovieScript.propsToRender: LingoList = None
+        MovieScript.lG: ... = None
+        MovieScript.wireBunchSav: LingoList = None
+        MovieScript.firstCamRepeat: ... = None
+        MovieScript.lightRects: ... = None
+        MovieScript.gImgXtra: ... = None
+        MovieScript.specialRectPoint: ... = None
 
 
 class System:
@@ -57,9 +215,14 @@ class Mouse:
         return 0
 
 
+class AppearanceOptions:
+    def __init__(self):
+        self.border = None
+
+
 class Window:
     def __init__(self, glob: LingoGlobal):
-        self.appearanceoptions = None
+        self.appearanceoptions = AppearanceOptions()
         self.resizable = LingoNumber()
         self.rect = LingoRect(LingoNumber(0))
         self.sizestate = LingoSymbol("normal")
@@ -70,6 +233,7 @@ class Movie:
         self._global = glob
         self.window = Window(glob)
         self.frame = 0
+        self.lock = LingoNumber(0)
     @property
     def path(self):
         return self._global.the_moviePath
@@ -80,7 +244,11 @@ class Movie:
 
     @property
     def exitlock(self):
-        return LingoNumber(0)
+        return self.lock
+
+    @exitlock.setter
+    def exitlock(self, value):
+        self.lock = value
 
     def go(self, linenumber: LingoNumber):
         pass
@@ -166,7 +334,7 @@ class LingoGlobal:
 
     @staticmethod
     def GetCachedStringLineData(string: str):
-        return LingoGlobal.StringLineCache.get(string)
+        return LingoGlobal.StringLineCache.get(string, LingoGlobal.CacheStringLineData(string))
 
     @staticmethod
     def CacheStringLineData(key: str):
@@ -334,8 +502,6 @@ class LingoGlobal:
 
     @dispatch(str)
     def member(self, membernameornum: str, castnameornum=None):
-        if castnameornum is None:
-            return self.LingoRuntime.GetCastMember(membernameornum)
         return self.LingoRuntime.GetCastMember(membernameornum, castnameornum)
 
     @dispatch(LingoNumber, LingoNumber, LingoNumber)

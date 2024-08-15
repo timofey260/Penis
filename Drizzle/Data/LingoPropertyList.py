@@ -31,3 +31,7 @@ class LingoPropertyList:
 
     def __str__(self):
         return "[" + ", ".join([f"{k}: {v}" for k, v in self.Dict.items()]) + "]"
+
+    @property
+    def count(self):
+        return self.__len__()

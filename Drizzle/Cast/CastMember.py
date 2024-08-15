@@ -87,8 +87,8 @@ class CastMember:
             case CastMemberType.Text:
                 self.ImportFileImplText(fullPath)
 
-    def AssertType(self, type: CastMemberType):
-        assert self.Type != type, "This guy stinks"
+    def AssertType(self, Type: CastMemberType):
+        assert self.Type == Type, "This guy stinks"
 
     def CloneFrom(self, other: CastMember):
         self.Type = other.Type

@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import os.path
 from enum import Enum
 from multipledispatch import dispatch
 from Drizzle.Data.LingoNumber import LingoNumber
@@ -183,7 +185,7 @@ class LingoImage:
         self.image = self.image.copy()
 
     def Trimmed(self):
-        box = ImageOps.invert(self.image).getbbox()
+        box = ImageOps.invert(self.image.convert("RGB")).getbbox(alpha_only=False)
         return self.image.crop(box)
 
     def fill(self, color: LingoColor):
@@ -200,3 +202,13 @@ class LingoImage:
         if isinstance(dest, LingoList):
             quad = (*dest[0].asPoint(), *dest[3].asPoint(), *dest[2].asPoint(), *dest[1].asPoint())
             self.image.paste(source.image.transform(self.image.size, ImageTransform.AffineTransform(quad)))
+        elif isinstance(dest, LingoRect):
+            self.image.paste(source.image.resize((dest.width.IntValue, dest.height.IntValue)), (dest.left.IntValue, dest.top.IntValue))
+
+    @staticmethod
+    def LoadFromPath(path):
+        if os.path.exists(path):
+            image = Image.open(path)
+        else:
+            image = Image.new("RGBA", [1, 1])
+        return LingoImage(image, image.width, image.height, ImageType.B8G8R8A8)
