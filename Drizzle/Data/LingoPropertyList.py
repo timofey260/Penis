@@ -35,7 +35,7 @@ class LingoPropertyList:
 
     @property
     def count(self):
-        return self.__len__()
+        return LingoNumber(self.__len__())
 
     def __getattr__(self, item):
         return self[LingoSymbol(item)]

@@ -52,6 +52,10 @@ class CopyPixelsParameters:
 
 
 class LingoImage:
+    @property
+    def Pxl(self):
+        return self.MakePxl()
+
     @dispatch(int, int, ImageType)
     def __init__(self, width: int, height: int, Type: ImageType):
         self.Width = width
@@ -212,3 +216,9 @@ class LingoImage:
         else:
             image = Image.new("RGBA", [1, 1])
         return LingoImage(image, image.width, image.height, ImageType.B8G8R8A8)
+
+    def MakePxl(self):
+        img = LingoImage(1, 1, 32)
+        img.IsPxl = True
+        img.setpixel(0, 0, LingoColor.Black)
+        return img

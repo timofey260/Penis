@@ -351,7 +351,7 @@ class LingoGlobal:
     @staticmethod
     def thenumberoflines_helper(value: str):
         cacheData = LingoGlobal.GetCachedStringLineData(value)
-        return len(cacheData.NewlineIndices) + 1
+        return LingoNumber(len(cacheData.NewlineIndices) + 1)
 
     @staticmethod
     def lineof_helper(idx: LingoNumber, collection: str):
@@ -376,7 +376,7 @@ class LingoGlobal:
     def linemember_helper(d: str): return StringLineIndex(d)
 
     @staticmethod
-    def lengthmember_helper(d): return len(d)
+    def lengthmember_helper(d): return LingoNumber(len(d))
 
     def DoSliceString(self, string: str, start: int, end: int): raise NotImplementedError()
 
@@ -403,10 +403,10 @@ class LingoGlobal:
         return LingoNumber(1) if container.startswith(value) else LingoNumber(0)
 
     @staticmethod
-    def concat(*items): return "".join(items)
+    def concat(*items): return "".join([str(i) for i in items])
 
     @staticmethod
-    def concat_space(*a): return " ".join(a)
+    def concat_space(*a): return " ".join([str(i) for i in a])
 
     def slice_helper(self, obj, start: LingoNumber, end: LingoNumber):
         try:
@@ -500,9 +500,8 @@ class LingoGlobal:
 
     def objectp(self, d): raise NotImplementedError("when would this end")
 
-    @dispatch(str)
-    def member(self, membernameornum: str, castnameornum=None):
-        return self.LingoRuntime.GetCastMember(membernameornum.lower(), castnameornum)
+    def member(self, membernameornum, castnameornum=None):
+        return self.LingoRuntime.GetCastMember(membernameornum, castnameornum)
 
     @dispatch(LingoNumber, LingoNumber, LingoNumber)
     def color(self, r: LingoNumber, g: LingoNumber, b: LingoNumber):

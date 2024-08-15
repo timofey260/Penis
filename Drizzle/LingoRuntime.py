@@ -192,11 +192,11 @@ class LingoRuntime:
 
     @dispatch(int)
     def Random(self, clamp: int):
-        return self.Random(self._rngState, clamp)
+        return self.Random2(self._rngState, clamp)
 
     @staticmethod
     @dispatch(RngState, int)
-    def Random(state: RngState, clamp: int):
+    def Random2(state: RngState, clamp: int):
         if state.Seed == 0:
             LingoRuntime.InitRng(state)
 
@@ -250,7 +250,7 @@ class LingoRuntime:
             if tp == MovieScript:
                 movieScriptType = tp
             if tp.__base__ == LingoParentScript:
-                parentScripts.append(type)
+                parentScripts.append(tp)
             if tp.__base__ == LingoBehaviorScript:
                 behaviorScripts.append(tp)
 
@@ -262,10 +262,10 @@ class LingoRuntime:
         self.MovieScriptInstance.Init(self.Global)
 
         for scriptType in behaviorScripts:
-            self._behaviorScripts[scriptType.__name__] = scriptType
+            self._behaviorScripts[scriptType.__name__.lower()] = scriptType
 
         for scriptType in parentScripts:
-            self._behaviorScripts[scriptType.__name__] = scriptType
+            self._parentScripts[scriptType.__name__.lower()] = scriptType
 
         print(f"Instantiated movie script {movieScriptType}")
         print(f"found {len(parentScripts)} parent and {len(behaviorScripts)} behavior scripts")
@@ -283,9 +283,9 @@ class LingoRuntime:
 
     def CreateScript(self, Type: str, l: LingoList = LingoList()):
         if isinstance(Type, str):
-            scriptType = self._parentScripts.get(Type, None)
+            scriptType = self._parentScripts.get(Type.lower(), None)
             if scriptType is None:
-                scriptType = self._behaviorScripts.get(Type, None)
+                scriptType = self._behaviorScripts.get(Type.lower(), None)
                 if scriptType is None:
                     raise AttributeError("bullshit")
             Type = scriptType

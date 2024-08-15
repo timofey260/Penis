@@ -13,16 +13,16 @@ class LingoList:
 
     @property
     def count(self):
-        return self.__len__()
+        return LingoNumber(self.__len__())
 
     def __len__(self):
         return len(self.List)
 
     def __getitem__(self, item):
-        return self.List[int(item)]
+        return self.List[int(item) - 1]
 
     def __setitem__(self, key, value):
-        self.List[int(key)] = value
+        self.List[int(key) - 1] = value
 
     def getpos(self, value):
         return self.List.index(value)

@@ -4,7 +4,6 @@ if TYPE_CHECKING:
     from Drizzle.LingoRuntime import LingoRuntime
 from Drizzle.Cast.CastMember import CastMember
 from Drizzle.Data.LingoNumber import LingoNumber
-from overloading import overload
 from typing import Any
 
 

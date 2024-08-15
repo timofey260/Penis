@@ -77,7 +77,7 @@ class LingoColor:
         return not self.__eq__(other)
 
     def __str__(self):
-        return f"color({self.RedByte}, {self.GreenByte}, {self.BlueByte})"
+        return f"color( {self.RedByte}, {self.GreenByte}, {self.BlueByte} )"
 
     @property
     def White(self):

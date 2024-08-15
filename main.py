@@ -9,5 +9,5 @@ if __name__ == '__main__':
     runtime.Init()
     EditorRuntimeHelpers.RunStartup(runtime)
     filename = ""
-    EditorRuntimeHelpers.RunLoadLevel(runtime, filename)
+    # EditorRuntimeHelpers.RunLoadLevel(runtime, filename)
 
