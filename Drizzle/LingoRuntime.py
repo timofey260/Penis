@@ -54,18 +54,18 @@ class LingoRuntime:
 
     @dispatch(str)
     def GetCastLib(self, castName: str):
-        return self._castLibNames[castName]
+        return self._castLibNames[castName.lower()]
 
     def GetCastMember(self, nameOrNum, cast=None):
         if isinstance(nameOrNum, str):
-            found = self.GetCastMemberAnyCast(nameOrNum)
+            found = self.GetCastMemberAnyCast(nameOrNum.lower())
 
             if found is None:
                 print("failed to find the thing")
 
             return found
         if isinstance(cast, str):
-            found = self._castLibNames[cast].GetMember(nameOrNum)
+            found = self._castLibNames[cast.lower()].GetMember(nameOrNum)
         elif isinstance(cast, int):
             found = self._castLibs[cast - 1].GetMember(nameOrNum)
         elif isinstance(cast, LingoNumber):
@@ -81,13 +81,11 @@ class LingoRuntime:
         return found
 
     def GetCastMemberAnyCast(self, nameOrNum):
-        for k, v in self._castLibNames.items():
-            print(k, v)
         if isinstance(nameOrNum, str):
             if self._castMemberNameIndexDirty:
                 self.UpdateMemberNameIndex()
 
-            mem = self._castMemberNameIndex.get(nameOrNum)
+            mem = self._castMemberNameIndex.get(nameOrNum.lower())
             if mem is not None:
                 return mem
 
@@ -129,7 +127,7 @@ class LingoRuntime:
         def InitLib(name: str, offset: int):
             nonlocal i
             castLib = LingoCastLib(self, name, offset)
-            self._castLibNames[name] = castLib
+            self._castLibNames[name.lower()] = castLib
             self._castLibs.append(castLib)
             i += 1
         InitLib("Internal", 0)
@@ -174,7 +172,7 @@ class LingoRuntime:
                     continue
 
                 if not member.name in list(self._castMemberNameIndex.keys()):
-                    self._castMemberNameIndex[member.name] = member
+                    self._castMemberNameIndex[member.name.lower()] = member
 
         self._castMemberNameIndexDirty = False
 

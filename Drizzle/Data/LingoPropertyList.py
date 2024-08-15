@@ -1,5 +1,6 @@
 from Drizzle.Data.LingoNumber import LingoNumber
 from Drizzle.Data.LingoList import LingoList
+from Drizzle.Data.LingoSymbol import LingoSymbol
 from multipledispatch import dispatch
 
 
@@ -35,3 +36,6 @@ class LingoPropertyList:
     @property
     def count(self):
         return self.__len__()
+
+    def __getattr__(self, item):
+        return self[LingoSymbol(item)]

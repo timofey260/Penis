@@ -502,7 +502,7 @@ class LingoGlobal:
 
     @dispatch(str)
     def member(self, membernameornum: str, castnameornum=None):
-        return self.LingoRuntime.GetCastMember(membernameornum, castnameornum)
+        return self.LingoRuntime.GetCastMember(membernameornum.lower(), castnameornum)
 
     @dispatch(LingoNumber, LingoNumber, LingoNumber)
     def color(self, r: LingoNumber, g: LingoNumber, b: LingoNumber):
