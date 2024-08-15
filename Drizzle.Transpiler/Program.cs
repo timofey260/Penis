@@ -586,7 +586,7 @@ internal static class Program
         var loopTmp = $"tmp_{name}";
 
         ctx.Writer.WriteLine($"{loopTmp} = {start}");
-        ctx.Writer.WriteLine($"while {loopTmp}.IntValue < {end}: {{");
+        ctx.Writer.WriteLine($"while {loopTmp} < {end}: {{");
 
         MakeLoopTmp(ctx, name, $"{loopTmp}", number: true); // todo
         WriteStatementBlock(node.Block, ctx);
