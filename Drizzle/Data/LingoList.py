@@ -91,7 +91,7 @@ class LingoList:
         return self.List != other.List
 
     def __str__(self):
-        return print(self.List)
+        return "[" + ", ".join([str(i) for i in self.List]) + "]"
 
     def compare(self, x):
         if isinstance(x, LingoNumber):

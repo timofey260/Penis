@@ -8,6 +8,6 @@ if __name__ == '__main__':
     runtime = LingoRuntime(asm)
     runtime.Init()
     EditorRuntimeHelpers.RunStartup(runtime)
-    filename = ""
-    # EditorRuntimeHelpers.RunLoadLevel(runtime, filename)
+    filename = "/home/timofey26/Desktop/Penis/Data/LevelEditorProjects/000tests/GW_B01"
+    EditorRuntimeHelpers.RunLoadLevel(runtime, filename)
 

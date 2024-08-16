@@ -11,7 +11,7 @@ class EditorRuntimeHelpers:
 
     @staticmethod
     def RunLoadLevel(runtime: LingoRuntime, filePath: str):
-        withoutExt = os.path.split(filePath)
+        withoutExt, _ = os.path.splitext(filePath)
         runtime.CreateScript("loadLevel").loadlevel(withoutExt, LingoNumber(1))
 
     # something that we don't need

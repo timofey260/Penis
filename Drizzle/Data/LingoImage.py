@@ -33,7 +33,7 @@ class CopyPixelsParameters:
         self.Ink = CopyPixelsInk.Copy
         self.Blend = 0
         self.ForeColor = LingoColor(0, 0, 0)
-        self.Mask: LingoMask = None
+        self.Mask: LingoMask | None = None
 
     @staticmethod
     def parse(params: LingoPropertyList):
@@ -220,5 +220,5 @@ class LingoImage:
     def MakePxl(self):
         img = LingoImage(1, 1, 32)
         img.IsPxl = True
-        img.setpixel(0, 0, LingoColor.Black)
+        img.setpixel(0, 0, LingoColor(0, 0, 0).Black)
         return img

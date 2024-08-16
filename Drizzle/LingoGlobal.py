@@ -12,6 +12,7 @@ from Drizzle.Data.LingoPropertyList import LingoPropertyList
 from Drizzle.Xtra.ImgXtra import ImgXtra, BaseXtra
 from Drizzle.Xtra.FileIOXtra import FileIOXtra
 from Drizzle.LingoScriptRuntime import LingoScriptRuntime
+from Drizzle.Misc.Parser import Parser
 import math
 import os
 from multipledispatch import dispatch
@@ -712,7 +713,7 @@ class LingoGlobal:
             return LingoNumber(0)
 
         try:
-            pass
+            return Parser.Parse(a)
         except:
             return None  # todo
 
@@ -749,3 +750,7 @@ class LingoGlobal:
 
     def random(self, max: LingoNumber) -> LingoNumber:
         return LingoNumber(self.LingoRuntime.Random(max.IntValue))
+
+    @property
+    def self(self):
+        return self
