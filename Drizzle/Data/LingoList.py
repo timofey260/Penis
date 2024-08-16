@@ -9,7 +9,7 @@ class LingoList:
         if len(args) == 0:
             self.List = []
             return
-        self.List = args
+        self.List = list(args)
 
     @property
     def count(self):
@@ -25,7 +25,9 @@ class LingoList:
         self.List[int(key) - 1] = value
 
     def getpos(self, value):
-        return self.List.index(value)
+        if value not in self.List:
+            return LingoNumber(0)
+        return LingoNumber(self.List.index(value) + 1)
 
     def findpos(self):
         return None

@@ -3,6 +3,7 @@ from Drizzle.Data.LingoList import LingoList
 from Drizzle.Data.LingoColor import LingoColor
 from Drizzle.Data.LingoPoint import LingoPoint
 from Drizzle.Data.LingoPropertyList import LingoPropertyList
+from Drizzle.Data.LingoRect import LingoRect
 from Drizzle.Data.LingoSymbol import LingoSymbol
 from enum import Enum, auto
 
@@ -20,7 +21,6 @@ class Parser:
         isstr = False
         isprop = False
         isnum = False
-        isfloat = False
         count = -1
         lastchars = ""
         while count + 1 < len(text):
@@ -43,13 +43,11 @@ class Parser:
                 lastchars = ""
                 continue
             elif isnum:
-                if char in "-1234567890":
+                if char in "-1234567890.":
                     lastchars += char
                     continue
-                if char == ".":
-                    isfloat = True
+                isfloat = "." in lastchars
                 indent.append(LingoNumber(float(lastchars) if isfloat else int(lastchars)))
-                isfloat = False
                 isnum = False
                 lastchars = ""
 
@@ -79,6 +77,11 @@ class Parser:
                 items, newcount = Parser.LexerSubLoop(text[count:])
                 count += newcount
                 indent.append(LingoPoint(*items))
+            elif text[count:count+4].lower() == "rect":
+                count += 5
+                items, newcount = Parser.LexerSubLoop(text[count:])
+                count += newcount
+                indent.append(LingoRect(*items))
         return indent
 
     @staticmethod
@@ -86,19 +89,16 @@ class Parser:
         count = -1
         items = []
         isnum = False
-        isfloat = False
         lastchars = ""
         while count + 1 < len(text):
             count += 1
             char = text[count]
             if isnum:
-                if char in "-1234567890":
+                if char in "-1234567890.":
                     lastchars += char
                     continue
-                if char == ".":
-                    isfloat = True
+                isfloat = "." in lastchars
                 items.append(LingoNumber(float(lastchars) if isfloat else int(lastchars)))
-                isfloat = False
                 isnum = False
                 lastchars = ""
             if char in "-1234567890.":
@@ -154,18 +154,26 @@ class Parser:
                 item, offset = Parser.ParseLexedList(parsed[i + 1:])
                 i += offset
                 elementslist.append(item)
+                iskey = True
                 continue
             elif item == ParsedKeywords.PropListStart:
                 item, offset = Parser.ParseLexedPropList(parsed[i + 1:])
                 i += offset
                 elementslist.append(item)
+                iskey = True
                 continue
-            if item == ParsedKeywords.ListEnd:
+            elif item == ParsedKeywords.ListEnd:
                 break
         return LingoPropertyList(*elementslist), i + 1
 
     @staticmethod
     def Parse(text: str):
-        return Parser.ParseLexedList(Parser.Lexer(text)[1:])[0]
+        newtext = Parser.Lexer(text)
+        if newtext[0] == ParsedKeywords.PropListStart:
+            return Parser.ParseLexedPropList(newtext[1:])[0]
+        elif newtext[0] == ParsedKeywords.ListStart:
+            return Parser.ParseLexedList(newtext[1:])[0]
+        else:
+            return newtext[0]
 
 

@@ -342,7 +342,7 @@ class LingoGlobal:
         l = []
         for i in range(len(key)):
             char = key[i]
-            if char == "\r":
+            if char == "\r" or char == "\n":
                 l.append(i)
         sld = StringLineData()
         sld.NewlineIndices = l

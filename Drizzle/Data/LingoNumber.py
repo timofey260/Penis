@@ -27,8 +27,8 @@ class LingoNumber:
     def float(self):
         return LingoNumber(self.DecimalValue)
 
-    @staticmethod
-    def findpos(val):
+
+    def findpos(self, val):
         return -sys.maxsize * 2 - 1
 
     @staticmethod

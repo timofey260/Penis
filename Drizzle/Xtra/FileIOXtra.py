@@ -16,7 +16,7 @@ class FileIOXtra(BaseXtra):
 
     @dispatch(str, LingoNumber)
     def openfile(self, filePath: str, mode: LingoNumber):
-        openmode = ["a+", "r", "a"][mode.IntValue]
+        openmode = ["r+", "r", "a"][mode.IntValue]
         self._file = open(filePath, openmode)
 
     def Duplicate(self):
