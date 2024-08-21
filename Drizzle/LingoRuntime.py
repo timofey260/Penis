@@ -42,7 +42,6 @@ class LingoRuntime:
         self.KeysDown: set[int] = set()
         self._rngState = RngState()
         self.RngSeed = 0
-        self.MovieBasePath = ""
         self.MovieScriptInstance: MovieScript | None = None
         self._behaviorScripts: dict[str, type] = {}
         self._parentScripts: dict[str, type] = {}

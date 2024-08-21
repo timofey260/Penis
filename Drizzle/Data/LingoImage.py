@@ -190,7 +190,8 @@ class LingoImage:
 
     def Trimmed(self):
         box = ImageOps.invert(self.image.convert("RGB")).getbbox(alpha_only=False)
-        return self.image.crop(box)
+        cropped = self.image.crop(box)
+        return LingoImage(cropped, cropped.width, cropped.height, self.Type)
 
     def fill(self, color: LingoColor):
         self.CopyIfShared()

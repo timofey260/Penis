@@ -275,8 +275,8 @@ class StringCharIndex:
     def __getitem__(self, item):
         if isinstance(item, LingoNumber):
             item = item.IntValue
-        elif isinstance(item, list):
-            return self.String[item[0]:item[1]]
+        elif isinstance(item, slice):
+            return self.String[item.start - 1:item.stop:item.step]
         return self.String[item - 1] if 1 <= item < len(self.String) else None
 
     # yeah me neither bro
