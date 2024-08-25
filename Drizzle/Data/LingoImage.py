@@ -10,7 +10,7 @@ from Drizzle.Data.LingoColor import LingoColor
 from Drizzle.Data.LingoPropertyList import LingoPropertyList
 from Drizzle.Data.LingoSymbol import LingoSymbol
 from Drizzle.Data.LingoMask import LingoMask
-from PIL import Image, ImageOps, ImageTransform
+from PySide6.QtGui import QImage
 
 
 class ImageType(Enum):
@@ -62,7 +62,7 @@ class LingoImage:
         self.Height = height
         self.Type = Type
 
-        self.image = Image.new(self.getFormat(Type), [self.Width, self.Height])
+        self.image = QImage(width, height, LingoImage.getFormat(Type))
         self.IsPxl = False
         self.ImageBufferShared = False
 
@@ -70,24 +70,24 @@ class LingoImage:
     def __init__(self, width: int, height: int, bitDepth: int):
         self.__init__(width, height, ImageType(bitDepth))
 
-    @dispatch(Image.Image, int, int, ImageType)
-    def __init__(self, image: Image.Image, width: int, height: int, Type: ImageType):
+    @dispatch(QImage, int, int, ImageType)
+    def __init__(self, image: QImage, width: int, height: int, Type: ImageType):
         self.__init__(width, height, Type)
         self.image = image
 
     @staticmethod
-    def getFormat(Type: ImageType) -> str:
+    def getFormat(Type: ImageType) -> QImage.Format:
         match Type:
             case ImageType.Palette1:
-                return "1"
+                return QImage.Format.Format_Mono
             case ImageType.Palette8:
-                return "P"
+                return QImage.Format.Format_Indexed8
             case ImageType.B5G5R5A1:
-                return "I;16"
+                return QImage.Format.Format_ARGB8555_Premultiplied  # i hope it's correct
             case ImageType.B8G8R8A8:
-                return "RGBA"
+                return QImage.Format.Format_RGBA64
             case ImageType.L8:
-                return "RGBA"
+                return QImage.Format.Format_RGBA64
         raise NotImplementedError("Not supported")
 
     @property
@@ -125,7 +125,7 @@ class LingoImage:
     def getpixel(self, x: int, y: int):
         if x < 0 or x >= self.Width or y < 0 or y >= self.Height:
             return LingoColor.White
-        pixel = self.image.getpixel((x, y))
+        pixel = self.image.pixel(x, y)
         if self.Type == ImageType.Palette1:
             pixel: int
             return LingoColor(pixel, pixel, pixel)
@@ -153,7 +153,7 @@ class LingoImage:
         if x < 0 or x >= self.Width or y < 0 or y >= self.Height:
             return
         self.CopyIfShared()  # we copy image buffer to change it if we had it shared for some reason
-        self.image.putpixel((x,y), self.color_to_value(value))
+        self.image.setPixel(x, y, self.color_to_value(value))
 
     def color_to_value(self, color: LingoColor):
         if self.Type == ImageType.Palette1:
@@ -189,7 +189,8 @@ class LingoImage:
         self.image = self.image.copy()
 
     def Trimmed(self):
-        box = ImageOps.invert(self.image.convert("RGB")).getbbox(alpha_only=False)
+        # todo trim
+        # box = ImageOps.invert(self.image.convert("RGB")).getbbox(alpha_only=False)
         cropped = self.image.crop(box)
         return LingoImage(cropped, cropped.width, cropped.height, self.Type)
 
@@ -206,17 +207,18 @@ class LingoImage:
             params = CopyPixelsParameters.parse(paramlist)
         if isinstance(dest, LingoList):
             quad = (*dest[0].asPoint(), *dest[3].asPoint(), *dest[2].asPoint(), *dest[1].asPoint())
-            self.image.paste(source.image.transform(self.image.size, ImageTransform.AffineTransform(quad)))
+            pass
         elif isinstance(dest, LingoRect):
-            self.image.paste(source.image.resize((dest.width.IntValue, dest.height.IntValue)), (dest.left.IntValue, dest.top.IntValue))
+            pass
 
     @staticmethod
     def LoadFromPath(path):
         if os.path.exists(path):
-            image = Image.open(path)
+            image = QImage(1, 1, QImage.Format.Format_Mono)
+            image.load(path)
         else:
-            image = Image.new("RGBA", [1, 1])
-        return LingoImage(image, image.width, image.height, ImageType.B8G8R8A8)
+            image = QImage(1, 1, QImage.Format.Format_Mono)
+        return LingoImage(image, image.width(), image.height(), ImageType.B8G8R8A8)
 
     def MakePxl(self):
         img = LingoImage(1, 1, 32)
