@@ -1,6 +1,7 @@
 from __future__ import annotations
 from multipledispatch import dispatch
 from Drizzle.Data.LingoNumber import LingoNumber
+from PySide6.QtGui import QColor
 
 
 class LingoColor:
@@ -86,3 +87,5 @@ class LingoColor:
     @property
     def Black(self):
         return LingoColor(0, 0, 0)
+
+colorpalette = [QColor(i.RedByte, i.GreenByte, i.BlueByte) for i in [LingoColor.BitUnpack(i) for i in LingoColor.Palette]]

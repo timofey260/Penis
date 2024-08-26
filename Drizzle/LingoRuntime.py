@@ -14,6 +14,7 @@ from multipledispatch import dispatch
 from Drizzle.Data.Stopwatch import Stopwatch
 from Drizzle.Data.Assembly import Assembly
 from copy import deepcopy
+from multiprocessing.pool import ThreadPool
 
 AssemblyLocation = os.path.dirname(os.path.dirname(__file__))
 
@@ -109,10 +110,11 @@ class LingoRuntime:
         self.InitCastLibs()
         sw = Stopwatch.StartNew()
 
-        files = os.listdir(self.CastPath)
-
-        if self.LoadCastParallel() and False:
-            pass
+        files = [os.path.join(self.CastPath, i) for i in os.listdir(self.CastPath)]
+        if self.LoadCastParallel():
+            print("threading enabled")
+            with ThreadPool() as pool:
+                print(pool.map(lambda x: DoWork(x), files))
         else:
             for s in files:
                 DoWork(s)  # todo

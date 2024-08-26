@@ -6,11 +6,12 @@ from multipledispatch import dispatch
 from Drizzle.Data.LingoNumber import LingoNumber
 from Drizzle.Data.LingoList import LingoList
 from Drizzle.Data.LingoRect import LingoRect, LingoPoint
-from Drizzle.Data.LingoColor import LingoColor
+from Drizzle.Data.LingoColor import LingoColor, colorpalette
 from Drizzle.Data.LingoPropertyList import LingoPropertyList
 from Drizzle.Data.LingoSymbol import LingoSymbol
 from Drizzle.Data.LingoMask import LingoMask
-from PySide6.QtGui import QImage
+from PySide6.QtGui import QImage, QColor, QPainter
+from PySide6.QtCore import QRect, QPoint
 
 
 class ImageType(Enum):
@@ -65,6 +66,8 @@ class LingoImage:
         self.image = QImage(width, height, LingoImage.getFormat(Type))
         self.IsPxl = False
         self.ImageBufferShared = False
+        if self.Type == ImageType.Palette8:
+            self.image.setColorTable(colorpalette)
 
     @dispatch(int, int, int)
     def __init__(self, width: int, height: int, bitDepth: int):
@@ -85,9 +88,9 @@ class LingoImage:
             case ImageType.B5G5R5A1:
                 return QImage.Format.Format_ARGB8555_Premultiplied  # i hope it's correct
             case ImageType.B8G8R8A8:
-                return QImage.Format.Format_RGBA64
+                return QImage.Format.Format_ARGB32
             case ImageType.L8:
-                return QImage.Format.Format_RGBA64
+                return QImage.Format.Format_ARGB32
         raise NotImplementedError("Not supported")
 
     @property
@@ -125,20 +128,8 @@ class LingoImage:
     def getpixel(self, x: int, y: int):
         if x < 0 or x >= self.Width or y < 0 or y >= self.Height:
             return LingoColor.White
-        pixel = self.image.pixel(x, y)
-        if self.Type == ImageType.Palette1:
-            pixel: int
-            return LingoColor(pixel, pixel, pixel)
-        elif self.Type == ImageType.Palette8:
-            pixel: tuple[int, int, int]
-            raise NotImplementedError("fuckyoy")
-            return LingoColor(1, 1, 1)
-        elif self.Type == ImageType.L8 or self.Type == ImageType.B8G8R8A8:
-            pixel: tuple[int, int, int]
-            return LingoColor(pixel[0], pixel[1], pixel[2])
-        else:
-            print("uh shit not implemented")
-            return LingoColor(0, 0, 0)
+        pixel = self.image.pixelColor(x, y)
+        return LingoColor(pixel.red(), pixel.green(), pixel.blue())
 
     @dispatch(LingoPoint, LingoColor)
     def setpixel(self, point: LingoPoint, value: LingoColor):
@@ -161,7 +152,7 @@ class LingoImage:
         elif self.Type == ImageType.Palette8:
             raise NotImplementedError("fuckyoy")
         elif self.Type == ImageType.L8 or self.Type == ImageType.B8G8R8A8:
-            return color.RedByte, color.GreenByte, color.BlueByte
+            return QColor(color.RedByte, color.GreenByte, color.BlueByte).rgba()
         else:
             raise NotImplementedError("fuckyoy")
 
@@ -191,12 +182,35 @@ class LingoImage:
     def Trimmed(self):
         # todo trim
         # box = ImageOps.invert(self.image.convert("RGB")).getbbox(alpha_only=False)
-        cropped = self.image.crop(box)
-        return LingoImage(cropped, cropped.width, cropped.height, self.Type)
+        minX = 9999  # works hood enough
+        maxX = -9999
+        minY = 9999
+        maxY = -9999
+        any = False
+
+        for y in range(0, self.Height):
+            for x in range(0, self.Width):
+                px = self.getpixel(x, y)
+                if px == LingoColor(255, 255, 255):
+                    minX = min(minX, x)
+                    minY = min(minY, y)
+
+                    maxX = max(maxX, x + 1)
+                    maxY = max(maxY, y + 1)
+                    any = True
+        if not any:
+            return LingoImage(1, 1, self.Type)
+
+        if minX == 0 and minY == 0 and maxX == self.Width - 1 and maxY == self.Height - 1:
+            return self
+        image = LingoImage(maxX - minX, maxY - minY, self.Type)
+        print(minX, minY, maxX, maxY)
+
+        return image
 
     def fill(self, color: LingoColor):
         self.CopyIfShared()
-        self.image.paste(self.color_to_value(color), (0, 0, self.image.size[0], self.image.size[1]))
+        self.image.fill(self.color_to_value(color))
 
     def copypixels(self, source: LingoImage, dest, sourceRect: LingoRect, paramlist: LingoPropertyList = None):
         if paramlist is None:
@@ -214,10 +228,10 @@ class LingoImage:
     @staticmethod
     def LoadFromPath(path):
         if os.path.exists(path):
-            image = QImage(1, 1, QImage.Format.Format_Mono)
-            image.load(path)
+            image = QImage(path)
         else:
-            image = QImage(1, 1, QImage.Format.Format_Mono)
+            image = QImage(1, 1, QImage.Format.Format_ARGB32)
+        print(f"imported {path}")
         return LingoImage(image, image.width(), image.height(), ImageType.B8G8R8A8)
 
     def MakePxl(self):
